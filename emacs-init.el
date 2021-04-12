@@ -47,8 +47,6 @@
 (load-theme 'doom-dracula t)
 (add-to-list 'load-path "/home/danrobi/common-lisp/emacs-libvterm")
 (require 'vterm)
-(global-set-key (kbd "\C-x\C-b") 'buffer-menu-other-window)
-(global-set-key (kbd "\C-x\b") 'switch-to-buffer-other-window)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -56,8 +54,8 @@
  ;; If there is more than one, they won't work right.
  '(display-line-numbers t)
  '(display-time-day-and-date t)
- '(display-time-format nil)
- '(display-time-use-mail-icon t)
+;; '(display-time-format nil)
+;; '(display-time-use-mail-icon t)
  '(package-selected-packages
    '(zoom vterm mode-line-debug mode-line-bell auto-package-update workgroups persp-mode persist helm elfeed doom-themes doom-modeline counsel))
  '(vterm-always-compile-module t))
@@ -68,8 +66,11 @@
  ;; If there is more than one, they won't work right.
  )
 ;; keybinds
-(define-prefix-command 'z-map)
+;;(global-set-key (kbd "C-q") 'kill-this-buffer)
+(global-set-key (kbd "\C-x\C-b") 'buffer-menu-other-window)
+(global-set-key (kbd "\C-x\b") 'switch-to-buffer-other-window)
 (global-set-key (kbd "C-x <up>") 'other-window)
+(define-prefix-command 'z-map)
 (global-set-key (kbd "C-z") 'z-map)
 (define-key z-map (kbd "b") 'eww)
 (define-key z-map (kbd "e") 'elfeed)
@@ -77,5 +78,9 @@
 (define-key z-map (kbd "j") 'bookmark-jump)
 (define-key z-map (kbd "d") 'bookmark-delete)
 (define-key z-map (kbd "z") 'zoom)
+;;(bind-key "<f2> <right>" 'windmove-right)
+;;(defun config-visit ()
+;;  (interactive)
+;;  (find-file "/home/danrobi/.emacs.d/init.el"))
+;;(global-set-key (kbd "C-c d") 'config-visit)
 ;; elfeed
-                   
