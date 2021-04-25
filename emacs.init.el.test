@@ -1,0 +1,31 @@
+(require 'package)
+(add-to-list 'package-archives
+	     '("melpa" . "https://melpa.org/packages/"))
+(package-refresh-contents)
+(package-initialize)
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
+(use-package zoom
+  :ensure t
+  :init
+  (setq zoom-size '(80 . 30))
+  (zoom-mode))
+(use-package persp-mode
+  :ensure t
+  :init
+  (persp-mode))
+(use-package doom-themes
+  :ensure t
+  :init
+  (load-theme 'doom-homage-black t))
+(use-package doom-modeline
+  :ensure t
+  :init
+  (doom-modeline-mode))
+(use-package workgroups
+  :ensure t
+  :init )
+(use-package counsel
+  :ensure t
+  :init
+  (counsel-mode))
