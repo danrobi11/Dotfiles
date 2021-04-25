@@ -22,9 +22,6 @@
   :ensure t
   :init
   (doom-modeline-mode))
-(use-package workgroups
-  :ensure t
-  :init )
 (use-package counsel
   :ensure t
   :init
