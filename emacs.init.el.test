@@ -26,3 +26,4 @@
   :ensure t
   :init
   (counsel-mode))
+
