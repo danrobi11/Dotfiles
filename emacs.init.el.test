@@ -19,8 +19,20 @@
 ;; update packages # M-x auto-package-update-now
 ;; capitalize-word # alt-c
 ;; reload init file # load-file
+;; Press o to open a folder in a separate window
 ;; calendar # i-d add-a-dairy| d show-dairy | x show-holidays | m show-mark-days | u hide-mark-days-and-holidays | h show-holiday-description
 ;; themes | doom-homage-black | doom-moonlight | doom-challenger-deep
+(defun load-history-filename-element (file-regexp)
+  (let* ((loads load-history)
+   (load-elt (and loads (car loads))))
+    (save-match-data
+      (while (and loads
+      (or (null (car load-elt))
+          (not (stringp (car load-elt)))
+          (not (string-match file-regexp (car load-elt)))))
+  (setq loads (cdr loads)
+        load-elt (and loads (car loads)))))
+    load-elt))
 (require 'package)
 (add-to-list 'package-archives
 	     '("melpa" . "https://melpa.org/packages/"))
@@ -28,14 +40,14 @@
 (package-initialize)
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
-(use-package exwm
-  :ensure t
-  :config
-  (require 'exwm)
-  (require 'exwm-config)
-  (exwm-config-example)
-  (require 'exwm-systemtray)
-  (exwm-systemtray-enable))
+;;(use-package exwm
+;;  :ensure t
+;;  :config
+;;  (require 'exwm)
+;;  (require 'exwm-config)
+;;  (exwm-config-example)
+;;  (require 'exwm-systemtray)
+;;  (exwm-systemtray-enable))
 (use-package zoom
   :ensure t
   :init
@@ -56,19 +68,47 @@
 (use-package counsel
   :ensure t
   :init
-  (counsel-mode))
-(use-package dmenu
+  (counsel-mode))  
+(use-package auto-package-update
+  :ensure t)
+(use-package elpher
+  :ensure t)
+(use-package vterm
+  :ensure t
+  :init
+  (setq vterm-always-compile-module t)
+  (add-to-list 'load-path "/home/danrobi/common-lisp/emacs-libvterm"))
+(use-package dashboard
+  :ensure t
+  :init      ;; tweak dashboard config before loading it
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-banner-logo-title "🐧 Hello Master 🐧")
+  (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+  ;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
+  (setq dashboard-center-content t) ;; set to 't' for centered content
+  :config
+  (dashboard-setup-startup-hook))
+(use-package page-break-lines
+  :ensure t
+  :init
+  (page-break-lines-mode))
+(use-package emoji-cheat-sheet-plus
   :ensure t
   :init )
+(use-package emojify
+  :ensure t
+  :init
+  (global-emojify-mode 1))
 (use-package elfeed
   :ensure t
   :config
-  (load (expand-file-name  "/home/danrobi/.elfeed/elfeed.el")))
+  (load (expand-file-name "/home/danrobi/.elfeed/elfeed.el")))
 (debug-on-entry t)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 (tooltip-mode -1)
-(set-fringe-mode -1)
+(set-fringe-mode 10)
 (menu-bar-mode -1)
 (auto-save-mode 1)
 (auto-save-visited-mode 1)
@@ -77,16 +117,23 @@
 (save-place-mode 1)
 (global-visual-line-mode 1)
 (global-hl-line-mode 1)
+(mouse-avoidance-mode 1)
+(ido-mode 1)
+;; (mode-line-debug-mode 1)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("0a41da554c41c9169bdaba5745468608706c9046231bbbc0d155af1a12f32271" "990e24b406787568c592db2b853aa65ecc2dcd08146c0d22293259d400174e37" "cae81b048b8bccb7308cdcb4a91e085b3c959401e74a0f125e7c5b173b916bf9" "be9645aaa8c11f76a10bcf36aaf83f54f4587ced1b9b679b55639c87404e2499" "c086fe46209696a2d01752c0216ed72fd6faeabaaaa40db9fc1518abebaf700d" "f94110b35f558e4c015b2c680f150bf8a19799d775f8352c957d9d1054b0a210" "e1ef2d5b8091f4953fe17b4ca3dd143d476c106e221d92ded38614266cea3c8b" "3c2f28c6ba2ad7373ea4c43f28fcf2eed14818ec9f0659b1c97d4e89c99e091e" "c83c095dd01cde64b631fb0fe5980587deec3834dc55144a6e78ff91ebc80b19" "fce3524887a0994f8b9b047aef9cc4cc017c5a93a5fb1f84d300391fba313743" "aaa4c36ce00e572784d424554dcc9641c82d1155370770e231e10c649b59a074" "5b809c3eae60da2af8a8cfba4e9e04b4d608cb49584cb5998f6e4a1c87c057c4" "fd22c8c803f2dac71db953b93df6560b6b058cb931ac12f688def67f08c10640" "75b8719c741c6d7afa290e0bb394d809f0cc62045b93e1d66cd646907f8e6d43" "2cdc13ef8c76a22daa0f46370011f54e79bae00d5736340a5ddfe656a767fddf" "56d10d2b60685d112dd54f4ba68a173c102eacc2a6048d417998249085383da1" "4bca89c1004e24981c840d3a32755bf859a6910c65b829d9441814000cf6c3d0" "7546a14373f1f2da6896830e7a73674ef274b3da313f8a2c4a79842e8a93953e" "0e2a7e1e632dd38a8e0227d2227cb8849f877dd878afb8219cb6bcdd02068a52" "76bfa9318742342233d8b0b42e824130b3a50dcc732866ff8e47366aed69de11" default))
  '(display-line-numbers t)
  '(display-time-day-and-date t)
  '(display-time-format nil)
+ '(display-time-use-mail-icon t)
+ '(mouse-avoidance-mode 'banish nil (avoid))
  '(package-selected-packages
-   '(counsel doom-modeline doom-themes persp-mode zoom use-package)))
+   '(emojify emoji-fontset dashboard elpher zoom vterm auto-package-update persp-mode helm elfeed doom-themes doom-modeline counsel)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
