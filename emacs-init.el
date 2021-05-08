@@ -10,7 +10,7 @@
 ;; https://github.com/ch11ng/exwm/wiki/Configuration-Example
 ;; https://sachachua.com/dotemacs
 ;; swap buffer position # window-swap-states
-;; create new file = find file command
+;; create new file # find file command
 ;; zoom it/out # text-scale-increase/decrease
 ;; install all the emacs icon # M-x all-the-icons-install-fonts
 ;; bookmark-set # save bookmark | bookmark-jump # load saved bookmark | bookmark-delete
