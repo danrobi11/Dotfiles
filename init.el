@@ -186,10 +186,10 @@
   :ensure t
   :init )
 
-(use-package counsel
-  :ensure t
-  :config
-  (counsel-mode))
+;;(use-package counsel
+;;  :ensure t
+;;  :init)
+;;  (counsel-mode))
 
 ;; Flycheck automatically checks buffers for errors while you type, and reports warnings and errors directly in the buffer and in an optional IDE-like error list.
 (use-package flycheck ;; require pkg-info
@@ -276,7 +276,7 @@
 ;;(mouse-avoidance-mode 1)
 ;;(mode-line-debug-mode)
 
-(custom-set-faces
+'(custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
@@ -300,10 +300,10 @@
 (global-set-key (kbd "C-x d") 'dmenu)
 (global-set-key (kbd "C-s") 'ctrlf-forward-default) ;; find word. isearch
 (global-set-key (kbd "C-x t") 'erc-track-switch-buffer) ;; go to irc channel with new message
-(global-set-key (kbd "C-x o") 'other-window) ;; switch to the next buffer
+(global-set-key (kbd "C-x C-o") 'other-window) ;; switch to the next buffer
 (global-set-key (kbd "C-x 0") 'delete-window) ;; remove the current window. does not kill/delete the window
 (global-set-key (kbd "C-x 1") 'delete-other-windows) ;; remove all the other windows
-(global-set-key (kbd "C-x k") 'kill-this-buffer) ;; this kill/delete the window
+(global-set-key (kbd "C-x C-k") 'kill-this-buffer) ;; this kill/delete the window
 (global-set-key (kbd "C-x b") 'eww) ;; open the eww browser
 (global-set-key (kbd "C-x <C-right>") 'next-buffer)
 (global-set-key (kbd "C-x <C-left>") 'previous-buffer)
@@ -311,8 +311,8 @@
 (global-set-key (kbd "C-g") 'keyboard-quit) ;; quit/ close minibuffer stuff
 (global-set-key (kbd "C-SPC") 'set-mark-command) ;; set mark | "C-SPC SPC" to cancel set mark
 (global-set-key (kbd "M-x") 'counsel-M-x) ;; open the execute-command minibuffer
-(global-set-key (kbd "C-x <C-up>") 'counsel-switch-buffer-other-window)
-
+(global-set-key (kbd "C-x C-v") 'counsel-switch-buffer-other-window)
+(global-set-key (kbd "C-x C-n") 'counsel-switch-buffer)
 ;; Personal Prefix-Command (kbd "C-z")
 (define-prefix-command 'z-map)
 (global-set-key (kbd "C-z") 'z-map)
@@ -320,6 +320,8 @@
 (define-key 'z-map (kbd "j") 'bookmark-jump)
 (define-key 'z-map (kbd "d") 'bookmark-delete)
 (global-set-key (kbd "C-x e") 'elfeed) ;; open elfeed
+;;
+;;
 ;; (global-set-key (kbd "\C-x\C-b") 'buffer-menu-other-window)
 ;; (global-set-key (kbd "\C-x\b") 'switch-to-buffer-other-window)
 ;; (global-set-key (kbd "\C-c\c") 'switch-to-buffer)
@@ -362,7 +364,7 @@
 (defun erc-libera ()
   (interactive)
   (erc-tls :server "irc.libera.chat" :port "6697" :nick "danrobi70"))
-(global-set-key (kbd "C-x i") 'ERC-Libera)
+;;(global-set-key (kbd "C-x i") 'ERC-Libera)
 
 ;;(defun config-visit ()
 ;;  (interactive)
@@ -383,30 +385,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(counsel-mode t)
- '(diredfl-global-mode t nil (diredfl))
- '(exec-path
-   ("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/lib/emacs/27.1/x86_64-linux-gnu" "/home/danrobi/.local/bin" "/usr/share"))
- '(exwm-systemtray-height 18)
- '(global-hl-line-mode t)
- '(global-visual-line-mode t)
- '(ido-max-window-height 0.75)
- '(ivy-fixed-height-minibuffer t)
- '(ivy-height 30)
- '(ivy-mode t)
- (package-selected-packages
-   (counsel emojify which-key vterm use-package transpose-frame tablist swiper shrink-path selectrum popup persp-mode multi-term marginalia keycast ht gnus-x-gm-raw flycheck flim exwm-float elpher elfeed doom-themes dmenu diredfl dashboard ctrlf browse-kill-ring avy auto-package-update async all-the-icons))
- '(which-key-idle-delay 3.0)
- '(which-key-mode t)
- '(which-key-side-window-max-height 0.5)
- '(which-key-side-window-max-width 0.5))
-;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(counsel-mode t)
  '(ctrlf-mode t)
  '(ctrlf-style-alist
    '((literal :prompt "literal" :translator regexp-quote :case-fold ctrlf-no-uppercase-literal-p :fallback
@@ -441,6 +419,8 @@
  '(which-key-side-window-max-height 0.5)
  '(which-key-side-window-max-width 0.5)
  '(window-min-height 30))
+;;; init.el ends here
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -454,4 +434,3 @@
  '(minibuffer-prompt ((t (:foreground "#0170bf" :height 1.0 :width normal))))
  '(mode-line ((t (:background "purple4" :foreground "white" :box nil :underline nil :weight light :height 0.9 :width expanded))))
  '(mode-line-inactive ((t (:background "#000000" :foreground "white" :box nil :underline nil :weight ultra-light :height 0.9 :width condensed)))))
-o
