@@ -1,3 +1,6 @@
+;;; package --- Summary
+;;; Commentary:
+;;; Code:
 (defun load-history-filename-element (file-regexp)
   (let* ((loads load-history)
    (load-elt (and loads (car loads))))
@@ -16,14 +19,16 @@
 (package-initialize)
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
+
+;; EXWM window manager for Emacs
 (use-package exwm ;; require xelb
   :ensure t
   :config
   (require 'exwm)
   (require 'exwm-config)
-  (exwm-config-example)
+  '(exwm-config-example)
   (require 'exwm-systemtray)
-  (exwm-systemtray-enable))
+  '(exwm-systemtray-enable))
 (use-package exwm-float
   :init
   (setq exwm-float-modify-amount '(:move-slow 20 :move-fast 100 :resize 50)
@@ -33,43 +38,64 @@
 (use-package xelb
   :ensure t
   :init)
+
+;;
 ;;(use-package zoom
 ;;  :ensure t
 ;;  :init
 ;;  (setq zoom-size '(80 . 80))
 ;;  (zoom-mode))
+
+;;
 (use-package persp-mode
   :ensure t
   :init
   (persp-mode))
+
+;; 
 (use-package doom-themes
   :ensure t
   :init
   (load-theme 'doom-homage-black t))
+
+;;
 ;;(use-package doom-modeline
 ;;  :ensure t
 ;;  :init
 ;;  (doom-modeline-mode))
+
+;; browse-kill-ring: Clipboard management. Find that piece of text you killed (copied) earlier.
 (use-package browse-kill-ring
   :ensure t
-  :init
-  (browse-kill-ring-mode))
-(use-package selectrum
+  :init)
+;;  (browse-kill-ring-mode 1))
+
+;;
+(use-package selectrum ;; completing-read are provided by consult.
+  :ensure t
+  :config
+  '(selectrum-mode))
+
+;; replace isearch
+(use-package ctrlf ;; 
   :ensure t
   :init
-  (selectrum-mode))
-(use-package ctrlf ;; replace isearch
-  :ensure t
-  :init
-  (ctrlf-mode))
+  '(ctrlf-mode))
+
+;; 
 (use-package auto-package-update
-  :ensure t)
+   :ensure t)
+
 (use-package elpher
   :ensure t)
+
+;;
 ;;(use-package multi-term
 ;;  :ensure t
 ;;  :init
 ;;  (setq multi-term-program "/bin/bash"))
+
+;;
 (use-package dashboard ;; require page-break-lines
   :ensure t
   :init      ;; tweak dashboard config before loading it
@@ -85,13 +111,18 @@
   :ensure t
   :init
   (page-break-lines-mode))
-(use-package emoji-cheat-sheet-plus
-  :ensure t
-  :init )
+
+;; 
+;;(use-package emoji-cheat-sheet-plus
+;;  :ensure t
+;;  :init )
+
+;; Emojify: Displays emojis in Emacs similar to how Github, Slack etc do. Need that to display emoji in emacs.
 (use-package emojify
   :ensure t
   :init
   (global-emojify-mode 1))
+
 ;; xclip/clipetty packages for emacs-cli
 ;;(use-package xclip
 ;;  :ensure t
@@ -100,56 +131,91 @@
 ;;(use-package clipetty
 ;;  :ensure t
 ;;  :hook (after-init . global-clipetty-mode))
+
+;; dmenu
 (use-package dmenu ;; require nadvice-0.3
   :ensure t
   :init )
+
+;; nadvice
+(use-package nadvice
+  :ensure t
+  :init)
+
+;;
 (use-package vterm
   :ensure t
   :init
   :load-path  "/home/danrobi/emacs-libvterm/")
-;;(use-package edwina ;; window management like DWM
+
+;; edwina: window management like DWM
+;;(use-package edwina ;; 
 ;;  :ensure t
 ;;  :config
 ;;  (setq display-buffer-base-action '(display-buffer-below-selected))
 ;;  (edwina-setup-dwm-keys)
 ;;  (edwina-mode 1))
-(use-package which-key ;; which-key provides the minor mode which-key-mode for Emacs. C-x and wait for the default of 1 second the minibuffer will expand with all of the available key bindings that follow C-x
+
+;; which-key provides the minor mode which-key-mode for Emacs. C-x and wait for the default of 1 second the minibuffer will expand with all of the available key bindings that follow C-x
+(use-package which-key ;; 
   :ensure t
   :config
   (which-key-setup-side-window-right)
 ;;  (which-key-setup-minibuffer)
 ;;  (setq which-key-popup-type 'side-window)
   (which-key-mode))
+
+;; The main function, `ace-window' is meant to replace `other-window' by assigning each window a short, unique label.
 ;;(use-package ace-window
 ;;  :ensure t
 ;;  :init )
+
+;;  Keycast shows the current command and its key or mouse binding in the mode line
 (use-package keycast
   :ensure t
   :init )
 ;;  (keycast-mode))
-(use-package transpose-frame ;; cycle windows 
+
+;; transpose-frame: Transpose windows arrangement (cycle windows around)
+(use-package transpose-frame ;;  
   :ensure t
   :init )
-;;(use-package consult ;; quickly select an item from a list of completion. (find-file)
+
+;; Consult quickly select an item from a list of completion. (find-file)
+(use-package consult ;; Consult is designed as the counsel equivalent for Selectrum
+  :ensure t
+  :init )
+
+;;(use-package counsel
 ;;  :ensure t
-;;  :init )
+;;  :init)
+;;  (counsel-mode))
+
+;; Flycheck automatically checks buffers for errors while you type, and reports warnings and errors directly in the buffer and in an optional IDE-like error list.
 (use-package flycheck ;; require pkg-info
   :ensure t
-  :init
-  (add-hook 'after-init-hook #'global-flycheck-mode))
-(use-package pkg-info
+  :init)
+;;  (add-hook 'after-init-hook #'global-flycheck-mode))
+
+(use-package pkg-info ;; required by flycheck
   :ensure t
   :init)
-(use-package marginalia ;; minibuffer completions annotations 
+
+;; Marginalia minibuffer completions annotations
+(use-package marginalia ;;  
   :ensure t
   :init
   (marginalia-mode))
+
+;; ERC: IRC Client In Emacs
 (use-package erc
   :ensure t
   :config
   (load (expand-file-name "/home/danrobi/.emacs.d/.ercrc.el"))
   (erc-notify-mode) ;; notification in mode-line
   (erc-notifications-mode)) ;; desktop notification
+
+;; Elfeed is a web feed client for Emacs
 (use-package elfeed
   :ensure t
   :config
@@ -157,18 +223,30 @@
   (setq-default elfeed-search-filter "@1-week-ago +unread "))
     (defun my-elfeed-mark-all-read ()
       (interactive)
-      (elfeed-untag elfeed-search-entries 'unread)
-      (elfeed-search-update :force)) ; redraw
+      '(elfeed-untag 'elfeed-search-entries 'unread)
+      '(elfeed-search-update :force)) ; redraw
+
+;; Diredfl extra font lock rules for a more colourful dired
 (use-package diredfl
   :demand t
   :config
-  (add-hook 'dired-mode-hook 'diredfl-mode)
+  (add-hook 'after-init-hook #'diredfl-global-mode)
   :custom-face
   (diredfl-dir-name ((t (:foreground "#3679D8" :box (:line-width 2 :color "grey75" :style released-button)))))
   (diredfl-dir-priv ((t (:foreground "#3679D8" :underline t))))
   (diredfl-exec-priv ((t (:background "#79D836" :foreground "black"))))
   (diredfl-read-priv ((t (:background "#D8B941" :foreground "black"))))
   (diredfl-write-priv ((t (:background "#D83441" :foreground "black")))))
+
+(use-package org
+  :ensure t
+  :init
+  (add-hook 'org-mode-hook (lambda ()
+    "Beautify Org Checkbox Symbol"
+    (push '("[ ]" .  "☐") prettify-symbols-alist)
+    (push '("[X]" . "☑" ) prettify-symbols-alist)
+    (push '("[-]" . "❍" ) prettify-symbols-alist)
+    (prettify-symbols-mode))))
 
 ;;(setq appt-display-format 'window)
 ;;(setq appt-disp-window-function (function tsa/appt-disp-window))
@@ -182,14 +260,15 @@
 ;;(set-frame-parameter (selected-frame) 'alpha '(100 100))
 ;;(add-to-list 'default-frame-alist '(alpha 100 100))
 ;;
+;; (selectrum-mode  t)
 (desktop-save-mode 1)
 ;; (window-divider-mode 1)
 ;;(erc-notify-mode 1)
 ;;(exwm-enable)
 ;;(server-start)
-(setq x-select-enable-clipboard t)
 ;;(setq shr-width fill-column)
 (setq-default frame-title-format "%b (%f)")
+(diredfl-mode 1)
 (debug-on-entry t)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
@@ -203,9 +282,162 @@
 (save-place-mode 1)
 (global-visual-line-mode 1)
 (global-hl-line-mode 1)
+(global-display-line-numbers-mode 1)
 ;;(ido-mode 1)
 ;;(mouse-avoidance-mode 1)
-;; (mode-line-debug-mode 1)
+;;(mode-line-debug-mode)
+
+'(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ (diredfl-dir-name ((t (:foreground "#3679D8" :box (:line-width 2 :color "grey75" :style released-button)))))
+ (diredfl-dir-priv ((t (:foreground "#3679D8" :underline t))))
+ (diredfl-exec-priv ((t (:background "#79D836" :foreground "black"))))
+ (diredfl-read-priv ((t (:background "#D8B941" :foreground "black"))))
+ (diredfl-write-priv ((t (:background "#D83441" :foreground "black"))))
+ (minibuffer-prompt ((t (:foreground "#0170bf" :height 1.0 :width normal))))
+ (mode-line ((t (:background "purple4" :foreground "white" :box nil :underline nil :weight light :height 0.9 :width expanded))))
+ (mode-line-inactive ((t (:background "#000000" :foreground "white" :box nil :underline nil :weight ultra-light :height 0.9 :width condensed)))))
+;; keybinds
+(global-set-key (kbd "C-x C-b") 'buffer-menu-other-window) ;; open the buffer-list menu in another window
+(global-set-key (kbd "C-x r") 'browse-kill-ring) ;;  open all the saved clipboard stuff buffer
+(global-set-key (kbd "C-y") 'yank) ;; paste
+(global-set-key (kbd "C-w") 'kill-region) ;; cut
+(global-set-key (kbd "M-w") 'kill-ring-save) ;; copy
+(global-set-key (kbd "C-x u") 'undo) ;; undo
+(global-set-key (kbd "C-x s") 'exwm-input-send-next-key) ;; send command to the external window
+(global-set-key (kbd "C-x d") 'dmenu)
+(global-set-key (kbd "C-s") 'ctrlf-forward-default) ;; find word. isearch
+(global-set-key (kbd "C-x t") 'erc-track-switch-buffer) ;; go to irc channel with new message
+(global-set-key (kbd "C-x C-o") 'other-window) ;; switch to the next buffer
+(global-set-key (kbd "C-x 0") 'delete-window) ;; remove the current window. does not kill/delete the window
+(global-set-key (kbd "C-x 1") 'delete-other-windows) ;; remove all the other windows
+(global-set-key (kbd "C-x C-k") 'kill-this-buffer) ;; this kill/delete the window
+(global-set-key (kbd "C-x b") 'eww) ;; open the eww browser
+(global-set-key (kbd "C-x <C-right>") 'next-buffer)
+(global-set-key (kbd "C-x <C-left>") 'previous-buffer)
+(global-set-key (kbd "C-x <down>") 'rotate-frame-clockwise) ;; require transpose-frame
+(global-set-key (kbd "C-g") 'keyboard-quit) ;; quit/ close minibuffer stuff
+(global-set-key (kbd "C-SPC") 'set-mark-command) ;; set mark | "C-SPC SPC" to cancel set mark
+(global-set-key (kbd "M-x") 'counsel-M-x) ;; open the execute-command minibuffer
+(global-set-key (kbd "C-x C-v") 'counsel-switch-buffer-other-window)
+(global-set-key (kbd "C-x C-n") 'counsel-ibuffer)
+(global-set-key (kbd "C-x C-i") 'exwm-workspace--handle-focus-in)
+;; Personal Prefix-Command (kbd "C-z")
+(define-prefix-command 'z-map)
+(global-set-key (kbd "C-z") 'z-map)
+(define-key 'z-map (kbd "s") 'bookmark-set)
+(define-key 'z-map (kbd "j") 'bookmark-jump)
+(define-key 'z-map (kbd "d") 'bookmark-delete)
+(global-set-key (kbd "C-x e") 'elfeed) ;; open elfeed
+;;
+;;
+;; (global-set-key (kbd "\C-x\C-b") 'buffer-menu-other-window)
+;; (global-set-key (kbd "\C-x\b") 'switch-to-buffer-other-window)
+;; (global-set-key (kbd "\C-c\c") 'switch-to-buffer)
+;; (global-set-key (kbd "M-o") 'ace-window)
+;; (global-set-key (kbd "<C-left>") 'previous-buffer)
+;; (global-set-key (kbd "<C-right>") 'next-buffer)
+;; (global-set-key (kbd "<C-tab>") 'other-window)
+;; (global-set-key (kbd "\C-x\p") 'switch-to-buffer-other-window)
+;;(global-set-key (kbd "\C-x\y") 'erc-track-switch-buffer)
+;; (global-set-key (kbd "M-w") 'selectrum-kill-ring-save)
+;; (global-set-key (kbd "M-w") 'x-clipboard-yank)
+;;(global-set-key (kbd "C-x c") 'kill-ring-save) ;; copy
+;;(global-set-key (kbd "\C-x\j") 'helm-buffers-list) ;; buffer-list prompted with isearch
+;;(global-set-key (kbd "M-x") 'helm-M-x)
+;; (global-set-key (kbd "\-x\d") 'dmenu)
+;; (global-set-key (kbd "M-w") 'clipboard-kill-ring-save)
+;; (global-set-key (kbd "M-w") 'clipboard-yank)
+;;(define-key global-map z-map (kbd "b") 'eww)
+;;(define-key global-map z-map (kbd "m") 'dmenu)
+;;(define-key z-map (kbd "r") 'erc-tls)
+;;(define-key z-map (kbd "e") 'elfeed)
+;; (define-key z-map (kbd "u") 'elfeed-update)
+;; (define-key z-map (kbd "z") 'buffer-menu-other-window)
+;; (define-key z-map (kbd "k") 'delete-window)
+;; (define-key z-map (kbd "t") 'erc-track-switch-buffer)
+;; (define-key z-map (kbd "w") 'window-swap-states)
+;; (define-key z-map (kbd "a") 'other-window)
+;; (define-key z-map (kbd "g") 'minibuffer-keyboard-quit)
+;; (define-key z-map (kbd "k") 'kill-this-buffer)
+;;(define-key global-map (kbd "s-z") 'z-map)
+;; (bind-key "<C-tab>" 'other-window)
+;; (global-set-key (kbd "C-q") 'kill-this-buffer)
+;; (global-set-key (kbd "<f5>") (lambda() (interactive)(find-file "~/")))
+;; (bind-key "<f2> <right>" 'windmove-right)
+;;(define-key global-map (kbd "C-x C-e") 'debug-print-eval-last-sexp)
+;; How to define keybind to open a specific file or command
+
+;; Thats how to set new functions
+;; ERC command. launch erc-tls
+(defun erc-libera ()
+  (interactive)
+  (erc-tls :server "irc.libera.chat" :port "6697" :nick "danrobi70"))
+;;(global-set-key (kbd "C-x i") 'ERC-Libera)
+
+;;(defun config-visit ()
+;;  (interactive)
+;;  (find-file "/home/danrobi/.emacs.d/init.el"))
+;;(global-set-key (kbd "\C-c\d") 'config-visit)
+
+(defun kitty ()
+  (interactive)
+  (async-shell-command "/home/danrobi/.local/bin/./kitty &"))
+
+;;(global-set-key (kbd "\C-c\d") 'Qtox-AppImage)
+;;(defun Twitch-AppImage ()
+;;  (interactive)
+;;  (async-shell-command "/home/danrobi/.local/bin/./streamlink-twitch-gui-v1.11.0-x86_64.AppImage &"))
+;;(global-set-key (kbd "\C-c\d") 'Twitch-AppImage)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ctrlf-mode t)
+ '(ctrlf-style-alist
+   '((literal :prompt "literal" :translator regexp-quote :case-fold ctrlf-no-uppercase-literal-p :fallback
+	      (isearch-forward . isearch-backward))
+     (regexp :prompt "regexp" :translator identity :case-fold ctrlf-no-uppercase-regexp-p :fallback
+	     (isearch-forward-regexp . isearch-backward-regexp))
+     (fuzzy :prompt "fuzzy" :translator ctrlf-translate-fuzzy-literal :case-fold ctrlf-no-uppercase-literal-p)
+     (fuzzy-regexp :prompt "fuzzy regexp" :translator ctrlf-translate-fuzzy-regexp :case-fold ctrlf-no-uppercase-regexp-p)
+     (symbol :prompt "symbol" :translator ctrlf-translate-symbol :case-fold ctrlf-no-uppercase-literal-p :fallback
+	     (isearch-forward-symbol))
+     (word :prompt "word" :translator ctrlf-translate-word :case-fold ctrlf-no-uppercase-literal-p)))
+ '(diredfl-global-mode t nil (diredfl))
+ '(display-line-numbers t)
+ '(display-time-day-and-date t)
+ '(display-time-default-load-average nil)
+ '(exec-path
+   ("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/lib/emacs/27.1/x86_64-linux-gnu" "/home/danrobi/.local/bin" "/usr/share"))
+ '(exwm-systemtray-height 18)
+ '(global-hl-line-mode t)
+ '(global-visual-line-mode t)
+ '(ibuffer-always-show-last-buffer :nomini)
+ '(ido-max-window-height 0.75)
+ '(ivy-fixed-height-minibuffer t)
+ '(ivy-height 30)
+ '(ivy-mode t)
+ '(line-number-mode nil)
+ '(max-mini-window-height nil)
+ '(mode-line-in-non-selected-windows t)
+ '(mode-line-percent-position '(6 "%q"))
+ '(package-selected-packages
+   (counsel emojify which-key vterm use-package transpose-frame tablist swiper shrink-path selectrum popup persp-mode multi-term marginalia keycast ht gnus-x-gm-raw flycheck flim exwm-float elpher elfeed doom-themes dmenu diredfl dashboard ctrlf browse-kill-ring avy auto-package-update async all-the-icons))
+ '(resize-mini-windows t)
+ '(selectrum-fix-vertical-window-height t)
+ '(selectrum-max-window-height 30)
+ '(size-indication-mode nil)
+ '(which-key-idle-delay 3.0)
+ '(which-key-mode t)
+ '(which-key-side-window-max-height 0.5)
+ '(which-key-side-window-max-width 0.5)
+ '(window-min-height 30))
+;;; init.el ends here
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -218,149 +450,5 @@
  '(diredfl-read-priv ((t (:background "#D8B941" :foreground "black"))))
  '(diredfl-write-priv ((t (:background "#D83441" :foreground "black"))))
  '(minibuffer-prompt ((t (:foreground "#0170bf" :height 1.0 :width normal))))
- '(mode-line ((t (:background "purple4" :foreground "white" :box nil :underline nil :weight light :height 1.0 :width expanded))))
- '(mode-line-inactive ((t (:background "#000000" :foreground "white" :box nil :underline nil :weight ultra-light :height 1.0 :width condensed)))))
-;; keybinds
-;; (global-set-key (kbd "\C-x\C-b") 'buffer-menu-other-window)
-;; (global-set-key (kbd "\C-x\b") 'switch-to-buffer-other-window)
-;; (global-set-key (kbd "\C-c\c") 'switch-to-buffer)
-;; (global-set-key (kbd "M-o") 'ace-window)
-;; (global-set-key (kbd "<C-left>") 'previous-buffer)
-;; (global-set-key (kbd "<C-right>") 'next-buffer)
-;; (global-set-key (kbd "<C-tab>") 'other-window)
-(global-set-key (kbd "\C-x\p") 'switch-to-buffer-other-window)
-(global-set-key (kbd "\C-x\y") 'erc-track-switch-buffer)
-(global-set-key (kbd "\C-x\j") 'buffer-menu-other-window)
-(global-set-key (kbd "M-x") 'helm-M-x)
-;; (global-set-key (kbd "\-x\d") 'dmenu)
-(global-set-key (kbd "C-x <down>") 'rotate-frame-clockwise) ;; require transpose-frame
-;; (global-set-key (kbd "M-w") 'clipboard-yank)
-(global-set-key (kbd "M-y") 'browse-kill-ring) ;; browse-kill-ring consult
-(global-set-key (kbd "C-y") 'yank)
-(global-set-key (kbd "M-w") 'clipboard-kill-ring-save)
-;; ERC command. launch erc-tls
-(defun ERC-Libera ()
-  (interactive)
-  (erc-tls :server "irc.libera.chat" :port "6697" :nick "danrobi70"))
-(global-set-key (kbd "\C-x\w") 'ERC-Libera)
-;; Personal Prefix-Command (kbd "C-z")
-(define-prefix-command 'z-map)
-(global-set-key (kbd "C-z") 'z-map)
-;; (define-key z-map (kbd "t") 'erc-track-switch-buffer)
-(define-key z-map (kbd "b") 'eww)
-(define-key z-map (kbd "m") 'dmenu)
-;;(define-key z-map (kbd "r") 'erc-tls)
-(define-key z-map (kbd "e") 'elfeed)
-;; (define-key z-map (kbd "u") 'elfeed-update)
-(define-key z-map (kbd "s") 'bookmark-set)
-(define-key z-map (kbd "j") 'bookmark-jump)
-(define-key z-map (kbd "d") 'bookmark-delete)
-;; (define-key z-map (kbd "z") 'buffer-menu-other-window)
-;; (define-key z-map (kbd "k") 'delete-window)
-;; (define-key z-map (kbd "w") 'window-swap-states)
-;; (define-key z-map (kbd "a") 'other-window)
-;; (define-key z-map (kbd "g") 'minibuffer-keyboard-quit)
-;; (define-key z-map (kbd "k") 'kill-this-buffer)
-;; (bind-key "<C-tab>" 'other-window)
-;; (global-set-key (kbd "C-q") 'kill-this-buffer)
-;; (global-set-key (kbd "<f5>") (lambda() (interactive)(find-file "~/")))
-;; (bind-key "<f2> <right>" 'windmove-right)
-;;
-;; How to defene keybind to open a specific file or command
-;;(defun config-visit ()
-;;  (interactive)
-;;  (find-file "/home/danrobi/.emacs.d/init.el"))
-;;(global-set-key (kbd "\C-c\d") 'config-visit)
-;;(defun Qtox-AppImage ()
-;;  (interactive)
-;;  (async-shell-command "/home/danrobi/.local/bin/./qTox-v1.17.3.x86_64.AppImage &"))
-;;(global-set-key (kbd "\C-c\d") 'Qtox-AppImage)
-;;(defun Twitch-AppImage ()
-;;  (interactive)
-;;  (async-shell-command "/home/danrobi/.local/bin/./streamlink-twitch-gui-v1.11.0-x86_64.AppImage &"))
-;;(global-set-key (kbd "\C-c\d") 'Twitch-AppImage)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(2C-autoscroll nil)
- '(column-number-indicator-zero-based nil)
- '(column-number-mode nil)
- '(counsel-mode nil)
- '(counsel-yank-pop-filter 'identity)
- '(counsel-yank-pop-separator "
-")
- '(counsel-yank-pop-truncate-radius 30)
- '(ctrlf-mode t)
- '(display-line-numbers t)
- '(display-time-day-and-date t)
- '(display-time-default-load-average nil)
- '(display-time-format nil)
- '(display-time-load-average-threshold 0.0)
- '(display-time-mail-face 'default)
- '(display-time-use-mail-icon t)
- '(display-time-world-timer-enable nil)
- '(doom-modeline-window-width-limit nil)
- '(elfeed-search-title-max-width 120)
- '(elfeed-search-title-min-width 30)
- '(erc-channel-hide-list nil)
- '(erc-fill-mode t)
- '(erc-fill-variable-maximum-indentation 17)
- '(erc-hide-list '("JOIN" "PART" "QUIT"))
- '(erc-network-hide-list nil)
- '(erc-notifications-mode t)
- '(erc-readonly-mode t)
- '(exec-path
-   '("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/lib/emacs/27.1/x86_64-linux-gnu" "/home/danrobi/.local/bin" "/usr/share"))
- '(exwm-input-line-mode-passthrough nil)
- '(exwm-manage-force-tiling t)
- '(exwm-manage-ping-timeout 15)
- '(exwm-systemtray-height 18)
- '(global-eldoc-mode nil)
- '(global-hl-line-mode t)
- '(global-tab-line-mode nil)
- '(global-visual-line-mode t)
- '(grep-window-height 30)
- '(helm-autoresize-min-height 30)
- '(helm-display-buffer-height 30)
- '(icomplete-mode t)
- '(ido-completion-buffer-all-completions t)
- '(ido-default-buffer-method 'selected-window)
- '(ido-max-window-height 30)
- '(ido-use-virtual-buffers 'auto)
- '(inhibit-default-init t)
- '(ivy-fixed-height-minibuffer nil)
- '(ivy-height 30)
- '(ivy-height-alist
-   '((counsel-evil-registers . 30)
-     (counsel-yank-pop . 30)
-     (counsel-git-log . 4)))
- '(line-number-mode nil)
- '(marginalia-mode t)
- '(max-mini-window-height nil)
- '(minibuffer-auto-raise t)
- '(minibuffer-frame-alist '((width . 70) (height . 3)))
- '(mode-line-percent-position '(-3 "%P"))
- '(mouse-avoidance-mode nil nil (avoid))
- '(package-selected-packages
-   '(flycheck pkg-info ctrlf browse-kill-ring transpose-frame which-key exwm-float exwm diredfl xelb keycast nadvice marginalia gnus-x-gm-raw multi-term emojify emoji-fontset dashboard elpher zoom auto-package-update persp-mode elfeed doom-themes))
- '(resize-mini-windows nil)
- '(selectrum-display-action '(selectrum-display-full-frame))
- '(selectrum-fix-vertical-window-height t)
- '(selectrum-max-window-height 0)
- '(selectrum-mode t)
- '(selectrum-show-indices t)
- '(shr-width 70)
- '(size-indication-mode nil)
- '(split-height-threshold 30)
- '(term-char-mode-buffer-read-only nil)
- '(term-char-mode-point-at-process-mark nil)
- '(timeclock-mode-line-display nil)
- '(view-read-only nil)
- '(which-key-frame-max-height 30)
- '(which-key-idle-delay 2.5)
- '(which-key-max-description-length 20)
- '(which-key-mode t)
- '(widget-menu-minibuffer-flag t)
- '(window-min-height 30))
+ '(mode-line ((t (:background "purple4" :foreground "white" :box nil :underline nil :weight light :height 0.9 :width expanded))))
+ '(mode-line-inactive ((t (:background "#000000" :foreground "white" :box nil :underline nil :weight ultra-light :height 0.9 :width condensed)))))
