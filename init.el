@@ -20,143 +20,25 @@
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
-;; EXWM window manager for Emacs
 (use-package exwm ;; require xelb
   :ensure t
   :config
   (require 'exwm)
   (require 'exwm-config)
-  '(exwm-config-example)
+  (exwm-config-example)
   (require 'exwm-systemtray)
-  '(exwm-systemtray-enable))
-(use-package exwm-float
-  :init
-  (setq exwm-float-modify-amount '(:move-slow 20 :move-fast 100 :resize 50)
-        exwm-float-border '(:stationary ("navy" . 1) :moving ("maroon" . 2)))
-  (exwm-float-setup)
-  (exwm-input-set-key (kbd "C-c M-f") #'exwm-float-mode))
-(use-package xelb
-  :ensure t
-  :init)
+  (exwm-systemtray-enable))
 
-;;
-;;(use-package zoom
-;;  :ensure t
-;;  :init
-;;  (setq zoom-size '(80 . 80))
-;;  (zoom-mode))
-
-;;
-(use-package persp-mode
-  :ensure t
-  :init
-  (persp-mode))
-
-;; 
-(use-package doom-themes
-  :ensure t
-  :init
-  (load-theme 'doom-homage-black t))
-
-;;
-;;(use-package doom-modeline
-;;  :ensure t
-;;  :init
-;;  (doom-modeline-mode))
-
-;; browse-kill-ring: Clipboard management. Find that piece of text you killed (copied) earlier.
-(use-package browse-kill-ring
-  :ensure t
-  :init)
-;;  (browse-kill-ring-mode 1))
-
-;;
 (use-package selectrum ;; completing-read are provided by consult.
   :ensure t
   :config
   '(selectrum-mode))
 
-;; replace isearch
-(use-package ctrlf ;; 
+(use-package counsel
   :ensure t
   :init
-  '(ctrlf-mode))
+  (counsel-mode))
 
-;; 
-(use-package auto-package-update
-   :ensure t)
-
-(use-package elpher
-  :ensure t)
-
-;;
-;;(use-package multi-term
-;;  :ensure t
-;;  :init
-;;  (setq multi-term-program "/bin/bash"))
-
-;;
-(use-package dashboard ;; require page-break-lines
-  :ensure t
-  :init      ;; tweak dashboard config before loading it
-  (setq dashboard-set-heading-icons t)
-  (setq dashboard-set-file-icons t)
-  (setq dashboard-banner-logo-title "🐧 Hello Master 🐧")
-  (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  ;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
-  (setq dashboard-center-content t) ;; set to 't' for centered content
-  :config
-  (dashboard-setup-startup-hook))
-(use-package page-break-lines ;; required by dashboard
-  :ensure t
-  :init
-  (page-break-lines-mode))
-
-;; 
-;;(use-package emoji-cheat-sheet-plus
-;;  :ensure t
-;;  :init )
-
-;; Emojify: Displays emojis in Emacs similar to how Github, Slack etc do. Need that to display emoji in emacs.
-(use-package emojify
-  :ensure t
-  :init
-  (global-emojify-mode 1))
-
-;; xclip/clipetty packages for emacs-cli
-;;(use-package xclip
-;;  :ensure t
-;;  :init
-;;  (xclip-mode))
-;;(use-package clipetty
-;;  :ensure t
-;;  :hook (after-init . global-clipetty-mode))
-
-;; dmenu
-(use-package dmenu ;; require nadvice-0.3
-  :ensure t
-  :init )
-
-;; nadvice
-(use-package nadvice
-  :ensure t
-  :init)
-
-;;
-(use-package vterm
-  :ensure t
-  :init
-  :load-path  "/home/danrobi/emacs-libvterm/")
-
-;; edwina: window management like DWM
-;;(use-package edwina ;; 
-;;  :ensure t
-;;  :config
-;;  (setq display-buffer-base-action '(display-buffer-below-selected))
-;;  (edwina-setup-dwm-keys)
-;;  (edwina-mode 1))
-
-;; which-key provides the minor mode which-key-mode for Emacs. C-x and wait for the default of 1 second the minibuffer will expand with all of the available key bindings that follow C-x
 (use-package which-key ;; 
   :ensure t
   :config
@@ -165,131 +47,21 @@
 ;;  (setq which-key-popup-type 'side-window)
   (which-key-mode))
 
-;; The main function, `ace-window' is meant to replace `other-window' by assigning each window a short, unique label.
-;;(use-package ace-window
-;;  :ensure t
-;;  :init )
-
-;;  Keycast shows the current command and its key or mouse binding in the mode line
-(use-package keycast
-  :ensure t
-  :init )
-;;  (keycast-mode))
-
-;; transpose-frame: Transpose windows arrangement (cycle windows around)
-(use-package transpose-frame ;;  
+(use-package dmenu ;; require nadvice-0.3
   :ensure t
   :init )
 
-;; Consult quickly select an item from a list of completion. (find-file)
-(use-package consult ;; Consult is designed as the counsel equivalent for Selectrum
-  :ensure t
-  :init )
-
-;;(use-package counsel
-;;  :ensure t
-;;  :init)
-;;  (counsel-mode))
-
-;; Flycheck automatically checks buffers for errors while you type, and reports warnings and errors directly in the buffer and in an optional IDE-like error list.
-(use-package flycheck ;; require pkg-info
-  :ensure t
-  :init
-  (add-hook 'after-init-hook #'global-flycheck-mode))
-
-(use-package pkg-info ;; required by flycheck
-  :ensure t
-  :init)
-
-;; Marginalia minibuffer completions annotations
-(use-package marginalia ;;  
-  :ensure t
-  :init
-  (marginalia-mode))
-
-;; ERC: IRC Client In Emacs
-(use-package erc
-  :ensure t
-  :config
-  (load (expand-file-name "/home/danrobi/.emacs.d/.ercrc.el"))
-  (erc-notify-mode) ;; notification in mode-line
-  (erc-notifications-mode)) ;; desktop notification
-
-;; Elfeed is a web feed client for Emacs
-(use-package elfeed
-  :ensure t
-  :config
-  (load (expand-file-name "/home/danrobi/.elfeed/elfeed.el"))
-  (setq-default elfeed-search-filter "@1-week-ago +unread "))
-    (defun my-elfeed-mark-all-read ()
-      (interactive)
-      '(elfeed-untag 'elfeed-search-entries 'unread)
-      '(elfeed-search-update :force)) ; redraw
-
-;; Diredfl extra font lock rules for a more colourful dired
-(use-package diredfl
-  :demand t
-  :config
-  (add-hook 'after-init-hook #'diredfl-global-mode)
-  :custom-face
-  (diredfl-dir-name ((t (:foreground "#3679D8" :box (:line-width 2 :color "grey75" :style released-button)))))
-  (diredfl-dir-priv ((t (:foreground "#3679D8" :underline t))))
-  (diredfl-exec-priv ((t (:background "#79D836" :foreground "black"))))
-  (diredfl-read-priv ((t (:background "#D8B941" :foreground "black"))))
-  (diredfl-write-priv ((t (:background "#D83441" :foreground "black")))))
-
-;;(setq appt-display-format 'window)
-;;(setq appt-disp-window-function (function tsa/appt-disp-window))
-;;(defun tsa/appt-disp-window (min-to-app new-time msg)
-;;  (save-window-excursion
-;;    (shell-command
-;;     (concat
-;;      "notify-send \"Orgmode: " msg "\"") nil nil)))
-;;
-;;transparency stuff
-;;(set-frame-parameter (selected-frame) 'alpha '(100 100))
-;;(add-to-list 'default-frame-alist '(alpha 100 100))
-;;
-;; (selectrum-mode  t)
-(desktop-save-mode 1)
-;; (window-divider-mode 1)
-;;(erc-notify-mode 1)
-;;(exwm-enable)
-;;(server-start)
-;;(setq shr-width fill-column)
-(setq-default frame-title-format "%b (%f)")
-(diredfl-mode 1)
-(debug-on-entry t)
+(load-theme 'manoj-dark 1)
+(display-time-mode 1)
+(global-visual-line-mode 1)
+(global-hl-line-mode 1)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 (tooltip-mode -1)
 (set-fringe-mode 1)
 (menu-bar-mode -1)
-(auto-save-mode 1)
-(auto-save-visited-mode 1)
-;; (display-battery-mode 1)
-(display-time-mode 1)
-(save-place-mode 1)
-(global-visual-line-mode 1)
-(global-hl-line-mode 1)
-;;(ido-mode 1)
-;;(mouse-avoidance-mode 1)
-;;(mode-line-debug-mode)
+;; (auto-save-mode 1)
 
-'(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- (diredfl-dir-name ((t (:foreground "#3679D8" :box (:line-width 2 :color "grey75" :style released-button)))))
- (diredfl-dir-priv ((t (:foreground "#3679D8" :underline t))))
- (diredfl-exec-priv ((t (:background "#79D836" :foreground "black"))))
- (diredfl-read-priv ((t (:background "#D8B941" :foreground "black"))))
- (diredfl-write-priv ((t (:background "#D83441" :foreground "black"))))
- (minibuffer-prompt ((t (:foreground "#0170bf" :height 1.0 :width normal))))
- (mode-line ((t (:background "purple4" :foreground "white" :box nil :underline nil :weight light :height 0.9 :width expanded))))
- (mode-line-inactive ((t (:background "#000000" :foreground "white" :box nil :underline nil :weight ultra-light :height 0.9 :width condensed)))))
-;; keybinds
 (global-set-key (kbd "C-x C-b") 'buffer-menu-other-window) ;; open the buffer-list menu in another window
 (global-set-key (kbd "C-x r") 'browse-kill-ring) ;;  open all the saved clipboard stuff buffer
 (global-set-key (kbd "C-y") 'yank) ;; paste
@@ -300,19 +72,27 @@
 (global-set-key (kbd "C-x d") 'dmenu)
 (global-set-key (kbd "C-s") 'ctrlf-forward-default) ;; find word. isearch
 (global-set-key (kbd "C-x t") 'erc-track-switch-buffer) ;; go to irc channel with new message
-(global-set-key (kbd "C-x C-o") 'other-window) ;; switch to the next buffer
+(global-set-key (kbd "C-x C-z") 'other-window) ;; switch to the next buffer
 (global-set-key (kbd "C-x 0") 'delete-window) ;; remove the current window. does not kill/delete the window
 (global-set-key (kbd "C-x 1") 'delete-other-windows) ;; remove all the other windows
 (global-set-key (kbd "C-x C-k") 'kill-this-buffer) ;; this kill/delete the window
 (global-set-key (kbd "C-x b") 'eww) ;; open the eww browser
-(global-set-key (kbd "C-x <C-right>") 'next-buffer)
-(global-set-key (kbd "C-x <C-left>") 'previous-buffer)
-(global-set-key (kbd "C-x <down>") 'rotate-frame-clockwise) ;; require transpose-frame
+(global-set-key (kbd "C-x C-a") 'next-buffer)
+(global-set-key (kbd "C-x C-d") 'previous-buffer)
+;;(global-set-key (kbd "C-x <down>") 'rotate-frame-clockwise) ;; require transpose-frame
 (global-set-key (kbd "C-g") 'keyboard-quit) ;; quit/ close minibuffer stuff
 (global-set-key (kbd "C-SPC") 'set-mark-command) ;; set mark | "C-SPC SPC" to cancel set mark
-(global-set-key (kbd "M-x") 'counsel-M-x) ;; open the execute-command minibuffer
+(global-set-key (kbd "M-x") 'counsel-M-x) ;; Open the execute-command minibuffer.
 (global-set-key (kbd "C-x C-v") 'counsel-switch-buffer-other-window)
-(global-set-key (kbd "C-x C-n") 'counsel-switch-buffer)
+(global-set-key (kbd "C-x C-c") 'ibuffer) ;; counsel-switch-buffer, ibuffer
+(global-set-key (kbd "<f5>") (lambda() (interactive)(load-file "~/.emacs.d/init.el")))
+(global-set-key (kbd "<f6>") (lambda() (interactive)(find-file "~/.emacs.d/init.el")))
+(global-set-key (kbd "<f7>") (lambda() (interactive)(find-file "/home/danrobi")))
+(global-set-key (kbd "<f8>") (lambda() (interactive)(find-file "/media/danrobi/1tbstorage/FilesTransferFolder")))
+(defun qtox.sh ()
+  (interactive)
+  (async-shell-command "/home/danrobi/.local/bin/./qtox.sh &"))
+
 ;; Personal Prefix-Command (kbd "C-z")
 (define-prefix-command 'z-map)
 (global-set-key (kbd "C-z") 'z-map)
@@ -320,117 +100,39 @@
 (define-key 'z-map (kbd "j") 'bookmark-jump)
 (define-key 'z-map (kbd "d") 'bookmark-delete)
 (global-set-key (kbd "C-x e") 'elfeed) ;; open elfeed
-;;
-;;
-;; (global-set-key (kbd "\C-x\C-b") 'buffer-menu-other-window)
-;; (global-set-key (kbd "\C-x\b") 'switch-to-buffer-other-window)
-;; (global-set-key (kbd "\C-c\c") 'switch-to-buffer)
-;; (global-set-key (kbd "M-o") 'ace-window)
-;; (global-set-key (kbd "<C-left>") 'previous-buffer)
-;; (global-set-key (kbd "<C-right>") 'next-buffer)
-;; (global-set-key (kbd "<C-tab>") 'other-window)
-;; (global-set-key (kbd "\C-x\p") 'switch-to-buffer-other-window)
-;;(global-set-key (kbd "\C-x\y") 'erc-track-switch-buffer)
-;; (global-set-key (kbd "M-w") 'selectrum-kill-ring-save)
-;; (global-set-key (kbd "M-w") 'x-clipboard-yank)
-;;(global-set-key (kbd "C-x c") 'kill-ring-save) ;; copy
-;;(global-set-key (kbd "\C-x\j") 'helm-buffers-list) ;; buffer-list prompted with isearch
-;;(global-set-key (kbd "M-x") 'helm-M-x)
-;; (global-set-key (kbd "\-x\d") 'dmenu)
-;; (global-set-key (kbd "M-w") 'clipboard-kill-ring-save)
-;; (global-set-key (kbd "M-w") 'clipboard-yank)
-;;(define-key global-map z-map (kbd "b") 'eww)
-;;(define-key global-map z-map (kbd "m") 'dmenu)
-;;(define-key z-map (kbd "r") 'erc-tls)
-;;(define-key z-map (kbd "e") 'elfeed)
-;; (define-key z-map (kbd "u") 'elfeed-update)
-;; (define-key z-map (kbd "z") 'buffer-menu-other-window)
-;; (define-key z-map (kbd "k") 'delete-window)
-;; (define-key z-map (kbd "t") 'erc-track-switch-buffer)
-;; (define-key z-map (kbd "w") 'window-swap-states)
-;; (define-key z-map (kbd "a") 'other-window)
-;; (define-key z-map (kbd "g") 'minibuffer-keyboard-quit)
-;; (define-key z-map (kbd "k") 'kill-this-buffer)
-;;(define-key global-map (kbd "s-z") 'z-map)
-;; (bind-key "<C-tab>" 'other-window)
-;; (global-set-key (kbd "C-q") 'kill-this-buffer)
-;; (global-set-key (kbd "<f5>") (lambda() (interactive)(find-file "~/")))
-;; (bind-key "<f2> <right>" 'windmove-right)
-;;(define-key global-map (kbd "C-x C-e") 'debug-print-eval-last-sexp)
-;; How to define keybind to open a specific file or command
-
-;; Thats how to set new functions
-;; ERC command. launch erc-tls
-(defun erc-libera ()
-  (interactive)
-  (erc-tls :server "irc.libera.chat" :port "6697" :nick "danrobi70"))
-;;(global-set-key (kbd "C-x i") 'ERC-Libera)
-
-;;(defun config-visit ()
-;;  (interactive)
-;;  (find-file "/home/danrobi/.emacs.d/init.el"))
-;;(global-set-key (kbd "\C-c\d") 'config-visit)
-
-(defun kitty ()
-  (interactive)
-  (async-shell-command "/home/danrobi/.local/bin/./kitty &"))
-
-;;(global-set-key (kbd "\C-c\d") 'Qtox-AppImage)
-;;(defun Twitch-AppImage ()
-;;  (interactive)
-;;  (async-shell-command "/home/danrobi/.local/bin/./streamlink-twitch-gui-v1.11.0-x86_64.AppImage &"))
-;;(global-set-key (kbd "\C-c\d") 'Twitch-AppImage)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ctrlf-mode t)
- '(ctrlf-style-alist
-   '((literal :prompt "literal" :translator regexp-quote :case-fold ctrlf-no-uppercase-literal-p :fallback
-	      (isearch-forward . isearch-backward))
-     (regexp :prompt "regexp" :translator identity :case-fold ctrlf-no-uppercase-regexp-p :fallback
-	     (isearch-forward-regexp . isearch-backward-regexp))
-     (fuzzy :prompt "fuzzy" :translator ctrlf-translate-fuzzy-literal :case-fold ctrlf-no-uppercase-literal-p)
-     (fuzzy-regexp :prompt "fuzzy regexp" :translator ctrlf-translate-fuzzy-regexp :case-fold ctrlf-no-uppercase-regexp-p)
-     (symbol :prompt "symbol" :translator ctrlf-translate-symbol :case-fold ctrlf-no-uppercase-literal-p :fallback
-	     (isearch-forward-symbol))
-     (word :prompt "word" :translator ctrlf-translate-word :case-fold ctrlf-no-uppercase-literal-p)))
- '(diredfl-global-mode t nil (diredfl))
- '(display-time-default-load-average nil)
+ '(auto-save-visited-mode t)
+ '(display-time-day-and-date t)
+ '(dmenu-prompt-string "Dmenu: ")
  '(exec-path
-   ("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/lib/emacs/27.1/x86_64-linux-gnu" "/home/danrobi/.local/bin" "/usr/share"))
- '(exwm-systemtray-height 18)
+   '("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/lib/emacs/27.1/x86_64-linux-gnu" "/home/danrobi/.local/bin"))
  '(global-hl-line-mode t)
  '(global-visual-line-mode t)
- '(ido-max-window-height 0.75)
+ '(ibuffer-always-show-last-buffer :nomini)
+ '(ibuffer-use-other-window nil)
+ '(ido-max-window-height 0.5)
  '(ivy-fixed-height-minibuffer t)
  '(ivy-height 30)
- '(ivy-mode t)
- '(max-mini-window-height nil)
- '(mode-line-in-non-selected-windows t)
+ '(line-number-mode nil)
+ '(max-mini-window-height 0.5)
+ '(mode-line-percent-position '(6 "%q"))
  '(package-selected-packages
-   (counsel emojify which-key vterm use-package transpose-frame tablist swiper shrink-path selectrum popup persp-mode multi-term marginalia keycast ht gnus-x-gm-raw flycheck flim exwm-float elpher elfeed doom-themes dmenu diredfl dashboard ctrlf browse-kill-ring avy auto-package-update async all-the-icons))
- '(resize-mini-windows t)
+   '(selectrum-prescient dmenu which-key use-package selectrum exwm emojify elpher dashboard ctrlf counsel browse-kill-ring))
  '(selectrum-fix-vertical-window-height t)
  '(selectrum-max-window-height 30)
- '(which-key-idle-delay 3.0)
+ '(selectrum-mode t)
  '(which-key-mode t)
  '(which-key-side-window-max-height 0.5)
- '(which-key-side-window-max-width 0.5)
- '(window-min-height 30))
-;;; init.el ends here
-
+ '(which-key-side-window-max-width 0.5))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(diredfl-dir-name ((t (:foreground "#3679D8" :box (:line-width 2 :color "grey75" :style released-button)))))
- '(diredfl-dir-priv ((t (:foreground "#3679D8" :underline t))))
- '(diredfl-exec-priv ((t (:background "#79D836" :foreground "black"))))
- '(diredfl-read-priv ((t (:background "#D8B941" :foreground "black"))))
- '(diredfl-write-priv ((t (:background "#D83441" :foreground "black"))))
- '(minibuffer-prompt ((t (:foreground "#0170bf" :height 1.0 :width normal))))
- '(mode-line ((t (:background "purple4" :foreground "white" :box nil :underline nil :weight light :height 0.9 :width expanded))))
- '(mode-line-inactive ((t (:background "#000000" :foreground "white" :box nil :underline nil :weight ultra-light :height 0.9 :width condensed)))))
+ '(mode-line ((t (:background "blue violet" :foreground "snow" :box nil :weight bold :height 0.9))))
+ '(mode-line-buffer-id ((t (:background "blue violet" :foreground "snow" :weight ultra-light :height 0.9))))
+ '(mode-line-inactive ((t (:background "black" :foreground "snow" :box nil :weight ultra-light :height 0.9)))))
