@@ -83,8 +83,9 @@
 (setq display-time-day-and-date 1)
 (setq display-time-default-load-average 'none)
 
-;; This sets my customization
+;; This sets the mode-line customization
 (defun my-config ()
+  "My Config"
   (interactive)
   (set-face-background #'mode-line-inactive "snow")
   (set-face-foreground #'mode-line-inactive "black")
