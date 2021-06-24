@@ -1,8 +1,3 @@
-#+TITLE: My First Emacs Defun
-#+AUTHOR: Dan
-#+EXPORT_FILE_NAME: /home/danrobi/my.first.emacs.defun.html
-#+STARTUP: showeverything
-
 * This sets the mode-line customization
   #+BEGIN_SRC emacs-lisp
 (defun my-violet-config ()
