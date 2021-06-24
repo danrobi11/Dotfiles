@@ -1,6 +1,6 @@
 (require 'package)
 (add-to-list 'package-archives
-	     '("melpa" . "https://melpa.org/packages/"))
+	     '("melpa" . "https://melpa.org/packages/")) ;;  (add-to-list approach preserves the default gnu elpa value in the list as well)
 (package-refresh-contents)
 (package-initialize)
 (unless (package-installed-p 'use-package)
@@ -52,11 +52,16 @@
 (use-package ace-window
   :ensure t
   :config
-  :bind (("C-x C-o" . ace-window)))
+  :bind (("C-x w" . ace-window)))
 
 (use-package which-key
   :ensure t
   :init)
+
+(use-package emojify
+  :ensure t
+  :init
+  (global-emojify-mode))
 
 (use-package ctrlf
   :ensure t
@@ -67,6 +72,10 @@
   :ensure t
   :init
   (marginalia-mode))
+
+(use-package auto-package-update
+  :ensure t
+  :init)
 
 ;; Emacs Customization
 (fringe-mode -1)
@@ -80,16 +89,20 @@
 (line-number-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
+(global-auto-revert-mode 1)
 (setq display-time-day-and-date 1)
 (setq display-time-default-load-average 'none)
 
+;; Open url link with eww
+(setq browse-url-browser-function 'eww-browse-url)
+
 ;; This sets the mode-line customization
-(defun my-config ()
-  "My Config"
+(defun my-violet-config ()
+  "Violet Mode-Line Config"
   (interactive)
   (set-face-background #'mode-line-inactive "snow")
   (set-face-foreground #'mode-line-inactive "black")
-  (set-face-background #'mode-line "black")
+  (set-face-background #'mode-line "blue violet")
   (set-face-foreground #'mode-line "snow"))
 
 ;; (:background "blue-violet" :foreground "snow" :box "0" :weight "ultra-light" :height "0.9"))
@@ -98,7 +111,7 @@
 (setq exec-path '("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/lib/emacs/27.1/x86_64-linux-gnu" "/usr/share" "/var/lib/" "/home/danrobi"))
 
 ;; Keybinds
-(global-set-key (kbd "C-x C-v") 'switch-to-buffer) ;; buffer-list in minibuffer
+(global-set-key (kbd "C-x b") 'switch-to-buffer) ;; buffer-list in minibuffer
 (global-set-key (kbd "M-w") 'selectrum-kill-ring-save) ;; copy
 (global-set-key (kbd "C-y") 'clipboard-yank) ;; paste
 (global-set-key (kbd "C-w") 'clipboard-kill-region) ;; cut
@@ -115,6 +128,7 @@
 (defalias 'ttl 'toggle-truncate-lines)
 (defalias 'asc 'async-shell-command)
 (defalias 'rb 'rename-buffer)
+(defalias 'otld 'org-toggle-link-display)
 
 ;; New Functions
 (defun qtox ()
@@ -132,10 +146,10 @@
   (interactive)
   (async-shell-command "/home/danrobi/.local/bin/./streamlink-twitch-gui-v1.11.0-x86_64.AppImage"))
 
-(defun sc-controller ()
-  "Sc-Controller AppImage"
+(defun xonotic ()
+  "Xonotic Shooter Game"
   (interactive)
-  (async-shell-command "/home/danrobi/.local/bin/./sc-controller-0.4.7.glibc-x86_64.AppImage"))
+  (async-shell-command "/home/danrobi/.local/bin/Xonotic/./xonotic-linux64-glx"))
 
 ;; Package List
 (custom-set-variables
@@ -144,7 +158,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ctrlf ace-window marginalia which-key use-package exwm elpher elfeed)))
+   '(emojify auto-package-update ctrlf ace-window marginalia which-key use-package exwm elpher elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -152,3 +166,4 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
