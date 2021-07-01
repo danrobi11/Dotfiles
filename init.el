@@ -3,10 +3,10 @@
                            (message "Value for %s getting modified to %s with %s in buffer %s"
                                     sym new-value operation where)))
 
-;;(require 'package)
-;;(add-to-list 'package-archives
-;;	     '("melpa" . "https://melpa.org/packages/")) ;;  (add-to-list approach preserves the default gnu elpa value in the list as well)
-;;(package-refresh-contents)
+(require 'package)
+(add-to-list 'package-archives
+	     '("melpa" . "https://melpa.org/packages/")) ;;  (add-to-list approach preserves the default gnu elpa value in the list as well)
+(package-refresh-contents)
 (package-initialize)
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
@@ -15,11 +15,7 @@
   :ensure t
   :init
   :config
-    (exwm-enable)
-;;  (require 'exwm)
-;;  (require 'exwm-config)
-;;  (exwm-config-example)
-;;  (setq exwm-floating-border-width '-t)
+  (exwm-enable)
   (require 'exwm-systemtray)
   (setq exwm-systemtray-height '18)
   (exwm-systemtray-enable))
@@ -99,11 +95,7 @@
   :init)
 
 ;; Emacs Customization
-;;(face-spec-set 'vertical-border-face '((t :background black)))
-;;(setq fringe-styles '("no-fringes" . 0))
-;;(setq 'fringe-styles '("no-fringes" . 0))
 (delete-selection-mode)
-;;(face-spec-set 'vertical-border '((t :inherit modeline)))
 (face-spec-set 'mode-line-inactive '((t :inherit modeline)))
 (face-spec-set 'mode-line-inactive '((t (:box))))
 (face-spec-set 'mode-line '((t (:box))))
@@ -191,23 +183,6 @@
 (global-set-key (kbd "C-c <left>") 'winner-undo)
 (global-set-key (kbd "C-c <right>") 'winner-redo)
 (global-set-key (kbd "C-x w") 'ace-window)
-
-
-;;(set-face-attribute 'org-table nil
-;;       :inherit: fixed-pitch))
-;;(global-set-key (kbd "s") "s" #'ignore)
-;;(global-set-key (kbd "s") 'self-insert-command)
-
-;;(setq exwm-input-global-keys
-;;      '((<kp-end> . ace-window)))
-;;(define-key global-map "<menu>" 'ace-window)
-
-;;(exwm-input-set-key (kbd "<insert>") 'ace-window);;you may have to restart exwm for it to take effect
-;;(exwm-input-set-key (kbd "<insert>") 'ace-window)
-;;(setq exwm-input-global-keys '(("<insert>" . ace-window)))
-;;(define-key exwm-mode-map "<insert>" 'ace-window)
-;;(define-key exwm-mode-map (kbd "C-c") nil) ;; completely disable mode-specific keys
-;;(global-set-key (kbd "C-x w") 'ace-window)
 
 (global-set-key (kbd "C-x <f5>") (lambda() (interactive)(load-file "~/.emacs.d/init.el")))
 (global-set-key (kbd "C-x <f6>") (lambda() (interactive)(find-file "~/.emacs.d/init.el")))
