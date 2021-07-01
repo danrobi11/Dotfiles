@@ -1,7 +1,12 @@
-(require 'package)
-(add-to-list 'package-archives
-	     '("melpa" . "https://melpa.org/packages/")) ;;  (add-to-list approach preserves the default gnu elpa value in the list as well)
-(package-refresh-contents)
+(add-variable-watcher 'the-var-to-be-watched
+                       (lambda (sym new-value operation where)
+                           (message "Value for %s getting modified to %s with %s in buffer %s"
+                                    sym new-value operation where)))
+
+;;(require 'package)
+;;(add-to-list 'package-archives
+;;	     '("melpa" . "https://melpa.org/packages/")) ;;  (add-to-list approach preserves the default gnu elpa value in the list as well)
+;;(package-refresh-contents)
 (package-initialize)
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
@@ -24,12 +29,17 @@
   :ensure t
   :config
   (load (expand-file-name "/home/danrobi/.elfeed/elfeed.el"))
-  (setq-default elfeed-search-filter "@1-week-ago +unread "))
-(defun my-elfeed-mark-all-read ()
+  (setq-default elfeed-search-filter "@1-week-ago +unread ")
+  (set-face-background 'elfeed-search-title-face "snow")
+  (set-face-foreground 'elfeed-search-title-face "black")
+  (set-face-background 'elfeed-search-unread-title-face "black")
+  (set-face-foreground 'elfeed-search-unread-title-face "snow")
+  (setq-default elfeed-search-title-max-width '135)
+(defun elfeed-mark-all-as-read ()
   "Mark all unread feeds as read"
       (interactive)
       (elfeed-untag 'elfeed-search-entries 'unread)
-      (elfeed-search-update :force)) ; redraw
+      (elfeed-search-update :force))) ; redraw
 
 (use-package erc
   :ensure t
@@ -38,25 +48,36 @@
   (erc-notify-mode) ;; notification in mode-line
   (erc-notifications-mode) ;; desktop notification
   (setq erc-hide-list '("JOIN" "PART" "QUIT"))
+  (setq erc-fill-column '95)
+  (erc-fill-mode)
   (global-set-key (kbd "C-x t") 'erc-track-switch-buffer))
 
 (use-package elpher
   :ensure t
   :init)
 
-(use-package selectrum
-  :ensure t
-  :init
-  (selectrum-mode))
+;;(use-package selectrum
+;;  :ensure t
+;;  :init)
+;;  (selectrum-mode))
+
+;;(use-package counsel
+;;  :ensure t
+;;  :init
+;;  (counsel-mode))
 
 (use-package ace-window
   :ensure t
-  :config
-  :bind (("C-x w" . ace-window)))
+  :init)
+;;  :bind (("<insert>" . ace-window)))
 
-(use-package which-key
+(use-package emoji-cheat-sheet-plus
   :ensure t
   :init)
+
+;;(use-package which-key
+;;  :ensure t
+;;  :init)
 
 (use-package emojify
   :ensure t
@@ -78,8 +99,16 @@
   :init)
 
 ;; Emacs Customization
-(fringe-mode -1)
-;; (set-fringe-mode -1)
+;;(face-spec-set 'vertical-border-face '((t :background black)))
+;;(setq fringe-styles '("no-fringes" . 0))
+;;(setq 'fringe-styles '("no-fringes" . 0))
+(delete-selection-mode)
+;;(face-spec-set 'vertical-border '((t :inherit modeline)))
+(face-spec-set 'mode-line-inactive '((t :inherit modeline)))
+(face-spec-set 'mode-line-inactive '((t (:box))))
+(face-spec-set 'mode-line '((t (:box))))
+(winner-mode 1)
+(fringe-mode 0)
 (global-hl-line-mode 1)
 (global-visual-line-mode 1)
 (global-display-line-numbers-mode 1)
@@ -89,21 +118,59 @@
 (line-number-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
+(pixel-scroll-mode -1)
 (global-auto-revert-mode 1)
 (setq display-time-day-and-date 1)
 (setq display-time-default-load-average 'none)
+(setenv "EDITOR" "emacsclient")
 
 ;; Open url link with eww
 (setq browse-url-browser-function 'eww-browse-url)
 
-;; This sets the mode-line customization
-(defun my-violet-config ()
-  "Violet Mode-Line Config"
+;; Backgrounds
+(defun snow-background ()
+  "Snow Background"
   (interactive)
   (set-face-background #'mode-line-inactive "snow")
   (set-face-foreground #'mode-line-inactive "black")
   (set-face-background #'mode-line "blue violet")
-  (set-face-foreground #'mode-line "snow"))
+  (set-face-foreground #'mode-line "snow")
+  (set-face-foreground #'vertical-border "snow")
+  (set-background-color "snow")
+  (set-foreground-color "black"))
+
+(defun lightsteelblue4-background ()
+  "LightSteelBlue4 Background"
+  (interactive)
+  (set-face-background #'mode-line-inactive "LightSteelBlue4")
+  (set-face-foreground #'mode-line-inactive "snow")
+  (set-face-background #'mode-line "blue violet")
+  (set-face-foreground #'mode-line "snow")
+  (set-face-foreground #'vertical-border "LightSteelBlue4")
+  (set-background-color "LightSteelBlue4")
+  (set-foreground-color "snow"))
+
+(defun lightsteelblue4-background ()
+  "LightSteelBlue4 Background"
+  (interactive)
+  (set-face-background #'mode-line-inactive "LightSteelBlue4")
+  (set-face-foreground #'mode-line-inactive "snow")
+  (set-face-background #'mode-line "blue violet")
+  (set-face-foreground #'mode-line "snow")
+  (set-face-foreground #'vertical-border "LightSteelBlue4")
+  (set-background-color "LightSteelBlue4")
+  (set-foreground-color "snow"))
+
+(defun black-background ()
+  "Black Background"
+  (interactive)
+  (set-face-background #'mode-line-inactive "black")
+  (set-face-foreground #'mode-line-inactive "snow")
+  (set-face-background #'mode-line "SlateBlue4")
+  (set-face-foreground #'mode-line "snow")
+  (set-face-foreground #'vertical-border "black")
+  (set-background-color "black")
+  (set-foreground-color "snow"))
 
 ;; (:background "blue-violet" :foreground "snow" :box "0" :weight "ultra-light" :height "0.9"))
 
@@ -111,17 +178,41 @@
 (setq exec-path '("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/lib/emacs/27.1/x86_64-linux-gnu" "/usr/share" "/var/lib/" "/home/danrobi"))
 
 ;; Keybinds
-(global-set-key (kbd "C-x b") 'switch-to-buffer) ;; buffer-list in minibuffer
-(global-set-key (kbd "M-w") 'selectrum-kill-ring-save) ;; copy
+(global-set-key (kbd "C-x b") 'helm-buffers-list)
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+(global-set-key (kbd "M-w") 'clipboard-kill-ring-save) ;; copy
 (global-set-key (kbd "C-y") 'clipboard-yank) ;; paste
 (global-set-key (kbd "C-w") 'clipboard-kill-region) ;; cut
+(global-set-key (kbd "M-x") 'helm-M-x)
+(global-set-key (kbd "C-x C-f") 'helm-find-files)
+(global-set-key (kbd "M-y") 'helm-show-kill-ring)
+;;(global-set-key (kbd "M-y") 'counsel-yank-pop)
 (global-set-key (kbd "C-x t") 'erc-track-switch-buffer) ;; switch to next erc-buffer new message
-;; (global-set-key (kbd "C-x C-o") 'ace-window)
+(global-set-key (kbd "C-c <left>") 'winner-undo)
+(global-set-key (kbd "C-c <right>") 'winner-redo)
+(global-set-key (kbd "C-x w") 'ace-window)
 
-(global-set-key (kbd "<f5>") (lambda() (interactive)(load-file "~/.emacs.d/init.el")))
-(global-set-key (kbd "<f6>") (lambda() (interactive)(find-file "~/.emacs.d/init.el")))
-(global-set-key (kbd "<f7>") (lambda() (interactive)(find-file "/home/danrobi")))
-(global-set-key (kbd "<f8>") (lambda() (interactive)(find-file "/media/danrobi/1tbstorage")))
+
+;;(set-face-attribute 'org-table nil
+;;       :inherit: fixed-pitch))
+;;(global-set-key (kbd "s") "s" #'ignore)
+;;(global-set-key (kbd "s") 'self-insert-command)
+
+;;(setq exwm-input-global-keys
+;;      '((<kp-end> . ace-window)))
+;;(define-key global-map "<menu>" 'ace-window)
+
+;;(exwm-input-set-key (kbd "<insert>") 'ace-window);;you may have to restart exwm for it to take effect
+;;(exwm-input-set-key (kbd "<insert>") 'ace-window)
+;;(setq exwm-input-global-keys '(("<insert>" . ace-window)))
+;;(define-key exwm-mode-map "<insert>" 'ace-window)
+;;(define-key exwm-mode-map (kbd "C-c") nil) ;; completely disable mode-specific keys
+;;(global-set-key (kbd "C-x w") 'ace-window)
+
+(global-set-key (kbd "C-x <f5>") (lambda() (interactive)(load-file "~/.emacs.d/init.el")))
+(global-set-key (kbd "C-x <f6>") (lambda() (interactive)(find-file "~/.emacs.d/init.el")))
+(global-set-key (kbd "C-x <f7>") (lambda() (interactive)(find-file "/home/danrobi")))
+(global-set-key (kbd "C-x <f8>") (lambda() (interactive)(find-file "/media/danrobi/1tbstorage")))
 
 ;; Aliases
 (defalias 'oeh 'org-html-export-to-html)
@@ -131,6 +222,11 @@
 (defalias 'otld 'org-toggle-link-display)
 
 ;; New Functions
+(defun lbry ()
+  "LBRY AppImage"
+  (interactive)
+  (async-shell-command "/home/danrobi/.local/bin/./LBRY_0.51.1.AppImage"))
+
 (defun qtox ()
   "qTox AppImage"
   (interactive)
@@ -146,6 +242,21 @@
   (interactive)
   (async-shell-command "/home/danrobi/.local/bin/./streamlink-twitch-gui-v1.11.0-x86_64.AppImage"))
 
+(defun netsurf ()
+  "NetSurf Browser"
+  (interactive)
+  (async-shell-command "flatpak run org.netsurf_browser.NetSurf"))
+
+(defun freetube ()
+  "FreeTube"
+  (interactive)
+  (async-shell-command "flatpak run io.freetubeapp.FreeTube"))
+
+(defun handbrake ()
+  "HandBrake Encoder"
+  (interactive)
+  (async-shell-command "flatpak run fr.handbrake.ghb"))
+
 (defun xonotic ()
   "Xonotic Shooter Game"
   (interactive)
@@ -158,7 +269,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(emojify auto-package-update ctrlf ace-window marginalia which-key use-package exwm elpher elfeed)))
+   '(emacs-emoji-cheat-sheet emoji-cheat-sheet-plus emojify auto-package-update ctrlf ace-window marginalia use-package exwm elpher elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -166,4 +277,3 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
