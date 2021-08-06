@@ -11,6 +11,9 @@
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
+(defun efs/exwm-update-class ()
+  (exwm-workspace-rename-buffer exwm-class-name)) ;; required by exwm add-hook
+
 (use-package exwm ;; require xelb
   :ensure t
   :init
@@ -19,7 +22,8 @@
 ;;  (require 'exwm)
 ;;  (require 'exwm-config)
 ;;  (exwm-config-example)
-;;  (setq exwm-floating-border-width '-t)
+  ;;  (setq exwm-floating-border-width '-t)
+  (add-hook 'exwm-update-class-hook #'efs/exwm-update-class) ;; auto rename buffer with app name
   (require 'exwm-systemtray)
   (setq exwm-systemtray-height '18)
   (exwm-systemtray-enable))
@@ -134,7 +138,8 @@
 (pixel-scroll-mode -1)
 (global-auto-revert-mode 1)
 (setq display-time-day-and-date 1)
-(setq display-time-default-load-average 'none)
+(setq display-time-default-load-average 'nil)
+(setq mode-line-in-non-selected-windows 't)
 (setenv "EDITOR" "emacsclient")
 (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; mouse scroll one line at a time
 (setq scroll-conservatively '1) ;; keyboard scroll one line at the time
@@ -142,6 +147,14 @@
 (setq fill-region 'center)
 (setq async-shell-command-buffer 'new-buffer)
 (setq url-privacy-level 'paranoid) ;; don’t send anything
+(setq exwm-manage-force-tiling 't) ;; prevent apps to launch in floating buffer
+
+;; ibuffer display name only
+(setq ibuffer-formats '((mark " " name)
+       (mark modified read-only
+             (name 16 16 :left)
+             (size 6 -1 :right))))
+
 ;;(ace-window-display-mode 1) ;; ace-window buffer number in the modeline
 ;;(setq aw-display-mode-overlay nil) ;; ace-window buffer number in the overlay
 ;;(setq aw-background nil) ;; ace-window overlay on/off
@@ -361,7 +374,12 @@ Copy of variable `browse-url-button-regexp'.")
 (defalias 'rb 'rename-buffer)
 (defalias 'otld 'org-toggle-link-display)
 
-;; Run Applications
+;; Run Applications and commands
+
+(defun bash-history()
+  "Display All Bash History"
+  (interactive)
+  (completing-read "History" (with-temp-buffer (insert-file-contents "~/.bash_history") (split-string (buffer-string) "\n" t))))
 
 (defun flameshot ()
   "Flameshot AppImage"
@@ -386,7 +404,7 @@ Copy of variable `browse-url-button-regexp'.")
 (defun status ()
   "Status AppImage"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./StatusIm-Desktop-v0.1.0-beta.10-06484e.AppImage" nil 0))
+  (call-process-shell-command "/home/danrobi/.local/bin/./StatusIm-Desktop-v0.2.1-beta-1632af.AppImage" nil 0))
 
 (defun tribler ()
   "Tribler"
@@ -481,12 +499,12 @@ Copy of variable `browse-url-button-regexp'.")
 (defun freetube ()
   "FreeTube"
   (interactive)
-  (call-process-shell-command "flatpak run io.freetubeapp.FreeTube" nil 0))
+  (call-process-shell-command "/home/danrobi/.local/bin/./freetube_0.13.2_amd64.AppImage" nil 0))
 
 (defun handbrake ()
   "HandBrake Encoder"
   (interactive)
-  (call-process-shell-command "flatpak run fr.handbrake.ghb" nil 0))
+  (call-process-shell-command "/usr/bin/handbrake" nil 0))
 
 (defun xonotic ()
   "Xonotic Shooter Game"
@@ -495,10 +513,15 @@ Copy of variable `browse-url-button-regexp'.")
 
 ;; Twitch Streams
 
-(defun cdnthe3rd ()
-  " CDNThe3rd Stream"
+(defun summit1g ()
+  "Summit1G Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/sodapoppin 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/summit1g 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+
+(defun cdnthe3rd ()
+  "CDNThe3rd Stream"
+  (interactive)
+  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/cdnthe3rd 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun sodapoppin ()
   "Sodapoppin Twitch Stream"
