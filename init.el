@@ -1,7 +1,7 @@
 (add-variable-watcher 'the-var-to-be-watched
-                       (lambda (sym new-value operation where)
-                           (message "Value for %s getting modified to %s with %s in buffer %s"
-                                    sym new-value operation where)))
+                      (lambda (sym new-value operation where)
+                        (message "Value for %s getting modified to %s with %s in buffer %s"
+                                 sym new-value operation where)))
 
 ;;(require 'package)
 ;;(add-to-list 'package-archives
@@ -11,52 +11,68 @@
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
+;; Set frame transparency
+(set-frame-parameter (selected-frame) 'alpha '(90 . 90))
+(add-to-list 'default-frame-alist '(alpha . (90 . 90)))
+(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 (defun efs/exwm-update-class ()
-  (exwm-workspace-rename-buffer exwm-class-name)) ;; required by exwm add-hook
+  (exwm-workspace-rename-buffer exwm-class-name)) ;; required by exwm add-hook update-class
 
 (use-package exwm ;; require xelb
   :ensure t
   :init
   :config
-;;  (exwm-enable)
-;;  (require 'exwm)
-;;  (require 'exwm-config)
-;;  (exwm-config-example)
+  ;;  (exwm-enable)
+  ;;  (require 'exwm)
+  ;;  (require 'exwm-config)
+  ;;  (exwm-config-example)
   ;;  (setq exwm-floating-border-width '-t)
   (add-hook 'exwm-update-class-hook #'efs/exwm-update-class) ;; auto rename buffer with app name
   (require 'exwm-systemtray)
   (setq exwm-systemtray-height '18)
   (exwm-systemtray-enable))
 
+(require 'exwm-randr)
+(exwm-randr-enable)
+(start-process-shell-command "xrandr" nil "1980x1080")
+(defun efs/set-wallpaper ()
+  (interactive)
+  (start-process-shell-command
+   "feh" nil  "feh --bg-scale /usr/share/backgrounds/desktop-background-girl.darked.png"))
+(efs/set-wallpaper)
+
+
 ;; Elfeed is a web feed client for Emacs
 (use-package elfeed
   :ensure t
   :init
   :config
-  (load (expand-file-name "/home/danrobi/.elfeed/elfeed.el"))
+  (load (expand-file-name "~/.elfeed/elfeed.el"))
   (setq-default elfeed-search-filter "@1-week-ago +unread ")
   (set-face-background 'elfeed-search-title-face "snow")
   (set-face-foreground 'elfeed-search-title-face "black")
   (set-face-background 'elfeed-search-unread-title-face "black")
   (set-face-foreground 'elfeed-search-unread-title-face "snow")
   (setq-default elfeed-search-title-max-width '145)
-(defun elfeed-mark-all-as-read ()
-  "Mark all unread feeds as read"
-      (interactive)
-      (elfeed-untag 'elfeed-search-entries 'unread)
-      (elfeed-search-update :force))) ; redraw
+  (defun elfeed-mark-all-as-read ()
+    "Mark all unread feeds as read"
+    (interactive)
+    (elfeed-untag 'elfeed-search-entries 'unread)
+    (elfeed-search-update :force))) ; redraw
 
 (use-package erc
   :ensure nil
   :init
   :config
-  (load (expand-file-name "/home/danrobi/.emacs.d/.ercrc.el"))
+  (load (expand-file-name "~/.emacs.d/.ercrc.el"))
   (erc-notify-mode) ;; notification in mode-line
   (erc-notifications-mode) ;; desktop notification
   (setq erc-hide-list '("JOIN" "PART" "QUIT"))
   (setq erc-fill-column '200)
   (setq-default erc-default-server "irc.libera.chat")
-;;  (setq erc-header-line '0)
+  ;;  (setq erc-header-line '0)
   (erc-fill-mode)
   (global-set-key (kbd "C-x t") 'erc-track-switch-buffer))
 
@@ -111,6 +127,26 @@
   :ensure t
   :init)
 
+(use-package sudo-edit
+  :ensure t )
+
+(use-package aggressive-indent
+  :ensure t
+  :init
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+  :config
+  (global-aggressive-indent-mode))
+
+;;(use-package amx ;; require ido-completing-read+
+;;  :ensure t
+;;  :init
+;;  :config)
+;;  (amx-mode 1))
+
+;;(use-package ido-completing-read+
+;;  :ensure t
+;;  :init)
+
 ;; Emacs Customization
 ;;(face-spec-set 'vertical-border-face '((t :background black)))
 ;;(setq fringe-styles '("no-fringes" . 0))
@@ -122,12 +158,16 @@
 (face-spec-set 'mode-line '((t (:box))))
 (winner-mode 1)
 (fringe-mode 0)
-(ido-mode 1)
-(setq ido-separator "\n")
+;;(ido-mode 1)
+;;(ido-everywhere 1)
+;;(ido-ubiquitous-mode 1)
+(setq line-move-visual nil) ;; move up/down line with softwrap
+(setq ido-separator "\n") ;; display ido buffer vertically
 (global-hl-line-mode 1)
 (global-visual-line-mode 1)
 (global-display-line-numbers-mode 1)
 (blink-cursor-mode -1)
+(save-place-mode 1) ;; save where cursor is in buffers
 (auto-save-mode -1)
 (auto-save-visited-mode -1) ;; autosave new edited buffers
 (tool-bar-mode -1)
@@ -146,14 +186,14 @@
 (setq shr-inhibit-images '0) ;; disable displaying images in eww and elfeed
 (setq fill-region 'center)
 (setq async-shell-command-buffer 'new-buffer)
-(setq url-privacy-level 'paranoid) ;; don’t send anything
+(setq url-privacy-level 'paranoid) ;; eww don’t send anything
 (setq exwm-manage-force-tiling 't) ;; prevent apps to launch in floating buffer
 
 ;; ibuffer display name only
 (setq ibuffer-formats '((mark " " name)
-       (mark modified read-only
-             (name 16 16 :left)
-             (size 6 -1 :right))))
+			(mark modified read-only
+			      (name 16 16 :left)
+			      (size 6 -1 :right))))
 
 ;;(ace-window-display-mode 1) ;; ace-window buffer number in the modeline
 ;;(setq aw-display-mode-overlay nil) ;; ace-window buffer number in the overlay
@@ -205,22 +245,11 @@
 ;; (:background "blue-violet" :foreground "snow" :box "0" :weight "ultra-light" :height "0.9"))
 
 ;; set env path
-(setq exec-path '("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/lib/emacs/27.1/x86_64-linux-gnu" "/usr/share" "/var/lib/" "/home/danrobi"))
+(setq exec-path '("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/share" "/var/lib/" "~/" "~/.local/bin"))
 
-;; Personal Prefix-Command (kbd "C-z")
-
-(define-prefix-command 'z-map)
-(global-set-key (kbd "C-z") 'z-map)
-(define-key 'z-map (kbd "u") 'elfeed-update)
-(define-key 'z-map (kbd "s") 'bookmark-set)
-(define-key 'z-map (kbd "j") 'bookmark-jump)
-(define-key 'z-map (kbd "d") 'bookmark-delete)
-(global-set-key (kbd "C-x e") 'elfeed) ;; open elfeed
-
-
-;; protesilaos stuff https://protesilaos.com/codelog/2021-07-24-emacs-misc-custom-commands/ 
+;; protesilaos stuff
+;; https://protesilaos.com/codelog/2021-07-24-emacs-misc-custom-commands/ 
 ;;Xah file backup
-(define-key 'z-map (kbd "b") 'xah-make-backup)
 (defun xah-make-backup ()
   "Make a backup copy of current file or dired marked files.
 If in dired, backup current file or marked files.
@@ -234,24 +263,22 @@ URL `http://ergoemacs.org/emacs/elisp_make-backup.html'
 Version 2018-05-15"
   (interactive)
   (let (($fname (buffer-file-name))
-($date-time-format "%Y-%m-%d_%H%M%S"))
+	($date-time-format "%Y-%m-%d_%H%M%S"))
     (if $fname
-(let (($backup-name
-       (concat $fname "~" (format-time-string $date-time-format) "~")))
-  (copy-file $fname $backup-name t)
-  (message (concat "Backup saved at: " $backup-name)))
+	(let (($backup-name
+	       (concat $fname "~" (format-time-string $date-time-format) "~")))
+	  (copy-file $fname $backup-name t)
+	  (message (concat "Backup saved at: " $backup-name)))
       (if (string-equal major-mode "dired-mode")
-  (progn
-    (mapc (lambda ($x)
-    (let (($backup-name
-   (concat $x "~" (format-time-string $date-time-format) "~")))
-      (copy-file $x $backup-name t)))
-  (dired-get-marked-files))
-    (message "marked files backed up"))
-(user-error "buffer not file nor dired")))))
+	  (progn
+	    (mapc (lambda ($x)
+		    (let (($backup-name
+			   (concat $x "~" (format-time-string $date-time-format) "~")))
+		      (copy-file $x $backup-name t)))
+		  (dired-get-marked-files))
+	    (message "marked files backed up"))
+	(user-error "buffer not file nor dired")))))
 
-
-(define-key 'z-map (kbd "n") 'prot-simple-rename-file-and-buffer)
 ;; A variant of this is present in the crux.el package by Bozhidar
 ;; Batsov.
 ;;;###autoload
@@ -266,7 +293,6 @@ Do not try to make a new directory or anything fancy."
       (rename-file file name))
     (set-visited-file-name name t t)))
 
-(define-key 'z-map (kbd "p") 'prot-diff-buffer-dwim)
 (defun prot-diff-buffer-dwim (&optional arg)
   "Diff buffer with its file's last saved state, or run `vc-diff'.
 With optional prefix ARG (\\[universal-argument]) enable
@@ -284,6 +310,7 @@ highlighting of word-wise changes (local to the current buffer)."
         (unless diff-refine
           (setq-local diff-refine 'font-lock))))))
 
+;; required by prot-search-occur-urls
 ;; I copy this from `browse-url-button-regexp' simply because there are
 ;; contexts where we do not need that dependency.
 (defvar prot-common-url-regexp
@@ -292,7 +319,7 @@ highlighting of word-wise changes (local to the current buffer)."
    "nntp\\|news\\|telnet\\|wais\\|mailto\\|info\\):\\)"
    "\\(//[-a-z0-9_.]+:[0-9]*\\)?"
    (let ((chars "-a-z0-9_=#$@~%&*+\\/[:word:]")
-	     (punct "!?:;.,"))
+	 (punct "!?:;.,"))
      (concat
       "\\(?:"
       ;; Match paired parentheses, e.g. in Wikipedia URLs:
@@ -307,8 +334,6 @@ highlighting of word-wise changes (local to the current buffer)."
 Copy of variable `browse-url-button-regexp'.")
 
 (autoload 'goto-address-mode "goto-addr")
-
-(define-key 'z-map (kbd "r") 'prot-search-occur-urls)
 ;;;###autoload
 (defun prot-search-occur-urls ()
   "Produce buttonised list of all URLs in the current buffer."
@@ -316,7 +341,74 @@ Copy of variable `browse-url-button-regexp'.")
   (add-hook 'occur-hook #'goto-address-mode)
   (occur prot-common-url-regexp "\\&")
   (remove-hook 'occur-hook #'goto-address-mode))
+;; end of prot stuff
+
+(defun efs/set-wallpaper ()
+  (interactive)
+  ;; NOTE: You will need to update this to a valid background path!
+  (start-process-shell-command
+   "feh" nil  "feh --bg-scale /usr/share/backgrounds/mxfb-AKS-red.jpg"))
+
+(efs/set-wallpaper)
+
+;; clean-exit show unsaved file in list when closing emacs
+;; https://old.reddit.com/r/emacs/comments/p04680/list_unsaved_buffers_before_exiting_emacs/
+(defun clean-exit ()
+  "Exit Emacs cleanly.
+If there are unsaved buffer, pop up a list for them to be saved
+before existing. Replaces ‘save-buffers-kill-terminal’."
+  (interactive)
+  (if (frame-parameter nil 'client)
+      (server-save-buffers-kill-terminal arg)
+    (if-let ((buf-list (seq-filter (lambda (buf)
+                                     (and (buffer-modified-p buf)
+                                          (buffer-file-name buf)))
+                                   (buffer-list))))
+        (progn
+          (pop-to-buffer (list-buffers-noselect t buf-list))
+          (message "s to save, C-k to kill, x to execute"))
+      (save-buffers-kill-emacs))))
+
+;; crux-extensions stuff
+;; https://github.com/bbatsov/crux/blob/master/crux.el
+(defun crux-delete-file-and-buffer ()
+  "Kill the current buffer and deletes the file it is visiting."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (when filename
+      (if (vc-backend filename)
+          (vc-delete-file filename)
+        (when (y-or-n-p (format "Are you sure you want to delete %s? " filename))
+          (delete-file filename delete-by-moving-to-trash)
+          (message "Deleted file %s" filename)
+          (kill-buffer))))))
+
+(defalias 'crux-delete-buffer-and-file #'crux-delete-file-and-buffer)
+
+(defun insert-date ()
+  "Insert a timestamp according to locale's date and time format."
+  (interactive)
+  (insert (format-time-string "%c" (current-time))))
+
+(defun create-scratch-buffer nil
+  "create a scratch buffer"
+  (interactive)
+  (switch-to-buffer (get-buffer-create "*scratch*"))
+  (lisp-interaction-mode))
+;; end of the crux stuff
+
 ;; Keybinds
+;; Personal Prefix-Command (kbd "C-z")
+(define-prefix-command 'z-map)
+(global-set-key (kbd "C-z") 'z-map)
+(define-key 'z-map (kbd "u") 'elfeed-update)
+(define-key 'z-map (kbd "s") 'bookmark-set)
+(define-key 'z-map (kbd "j") 'bookmark-jump)
+(define-key 'z-map (kbd "d") 'bookmark-delete)
+(define-key 'z-map (kbd "b") 'xah-make-backup)
+(define-key 'z-map (kbd "n") 'prot-simple-rename-file-and-buffer)
+(define-key 'z-map (kbd "r") 'prot-search-occur-urls)
+(define-key 'z-map (kbd "p") 'prot-diff-buffer-dwim) ;; show new edited stuff in the file (before saving)
 
 ;;(global-set-key (kbd "<s-up>") 'windmove-up)
 ;;(global-set-key (kbd "<s-down>") 'windmove-down)
@@ -329,6 +421,7 @@ Copy of variable `browse-url-button-regexp'.")
 (global-set-key (kbd "M-x") 'helm-M-x)
 ;;(global-set-key (kbd "M-x") 'execute-extended-command)
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
+;;(global-set-key (kbd "C-x C-f") 'find-file)
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
 ;;(global-set-key (kbd "M-y") 'counsel-yank-pop)
 (global-set-key (kbd "C-x t") 'erc-track-switch-buffer) ;; switch to next erc-buffer new message
@@ -338,11 +431,12 @@ Copy of variable `browse-url-button-regexp'.")
 (exwm-input-set-key (kbd "<s-right>") 'windmove-right)
 (exwm-input-set-key (kbd "<s-up>") 'windmove-up)
 (exwm-input-set-key (kbd "<s-down>") 'windmove-down)
-(exwm-input-set-key (kbd "s-z") 'ido-switch-buffer)
+;;(exwm-input-set-key (kbd "s-z") 'ido-switch-buffer)
+(exwm-input-set-key (kbd "s-z") 'helm-buffers-list)
 ;;(global-set-key (kbd "C-x w") 'ace-window)
 (global-set-key (kbd "C-x f") 'exwm-floating-toggle-floating)
 (global-set-key (kbd "C-M-x") 'eval-defun)
-
+(global-set-key (kbd "C-x e") 'elfeed) ;; open elfeed
 ;;(define-key (current-global-map) (kbd "<insert>") 'other-window)
 ;;(global-set-key (kbd "<insert>") (lambda() 'other-window))
 ;;(set-face-attribute 'org-table nil
@@ -350,21 +444,9 @@ Copy of variable `browse-url-button-regexp'.")
 ;;(global-set-key (kbd "s") "s" #'ignore)
 ;;(global-set-key (kbd "s") 'self-insert-command)
 
-;;(setq exwm-input-global-keys '((<insert> . other-window)))
-;;(define-key global-map (kbd "<insert>") 'other-window)
-;;(define-key global-map (kbd "<menu>") nil)
-;;(exwm-input-set-key '(("<s-up>") . other-window)
-;;(exwm-input-set-key (current-global-map) (kbd "<insert>") 'other-window);;you may have to restart exwm for it to take effect
-;;(define-key (exwm-input-set-key) (kbd "<insert>") 'ace-window)
-;;(setq exwm-input-global-keys '(("<s-down>" . windmove-down)))
-;;(define-key exwm-mode-map '(("<menu>" . other-window)) nil)
-;;(define-key exwm-mode-map '((<insert> . other-window)))
-;;(define-key exwm-mode-map (kbd "C-c") nil) ;; completely disable mode-specific keys
-;;(global-set-key (kbd "C-x w") 'ace-window)
-
 (global-set-key (kbd "C-x <f5>") (lambda() (interactive)(load-file "~/.emacs.d/init.el")))
 (global-set-key (kbd "C-x <f6>") (lambda() (interactive)(find-file "~/.emacs.d/init.el")))
-(global-set-key (kbd "C-x <f7>") (lambda() (interactive)(find-file "/home/danrobi")))
+(global-set-key (kbd "C-x <f7>") (lambda() (interactive)(find-file "~/")))
 (global-set-key (kbd "C-x <f8>") (lambda() (interactive)(find-file "/media/danrobi/1tbstorage")))
 
 ;; Aliases
@@ -374,9 +456,14 @@ Copy of variable `browse-url-button-regexp'.")
 (defalias 'rb 'rename-buffer)
 (defalias 'otld 'org-toggle-link-display)
 
-;; Run Applications and commands
+;; Applications and Functions
+(global-set-key (kbd "C-x /") 'display-keybind-list)
+(defun display-keybind-list ()
+  "Display keybinds list"
+  (interactive)
+  (call-process-shell-command "~/.local/bin/./emacs_keybind.sh" nil 0))
 
-(defun bash-history()
+(defun bash-history ()
   "Display All Bash History"
   (interactive)
   (completing-read "History" (with-temp-buffer (insert-file-contents "~/.bash_history") (split-string (buffer-string) "\n" t))))
@@ -384,27 +471,27 @@ Copy of variable `browse-url-button-regexp'.")
 (defun flameshot ()
   "Flameshot AppImage"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./Flameshot-0.10.1.x86_64.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./Flameshot-0.10.1.x86_64.AppImage" nil 0))
 
 (defun vieb ()
   "Vieb Browser AppImage"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./Vieb-5.3.0.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./Vieb-5.3.0.AppImage" nil 0))
 
 (defun lbry ()
   "LBRY AppImage"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./LBRY_0.51.1.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./LBRY_0.51.1.AppImage" nil 0))
 
 (defun qtox ()
   "qTox AppImage"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./qTox-v1.17.3.x86_64.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./qTox-v1.17.3.x86_64.AppImage" nil 0))
 
 (defun status ()
   "Status AppImage"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./StatusIm-Desktop-v0.2.1-beta-1632af.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./StatusIm-Desktop-v0.2.1-beta-1632af.AppImage" nil 0))
 
 (defun tribler ()
   "Tribler"
@@ -449,7 +536,7 @@ Copy of variable `browse-url-button-regexp'.")
 (defun kitty-terminal ()
   "kitty-terminal"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./kitty" nil 0))
+  (call-process-shell-command "~/.local/bin/./kitty" nil 0))
 
 (defun nm-applet ()
   "nm-applet"
@@ -459,7 +546,7 @@ Copy of variable `browse-url-button-regexp'.")
 (defun twitch ()
   "Twitch AppImage"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-twitch-gui-v1.11.0-x86_64.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-twitch-gui-v1.12.0-x86_64.AppImage" nil 0))
 
 (defun caffeine-indicator ()
   "caffeine-indicator"
@@ -474,7 +561,7 @@ Copy of variable `browse-url-button-regexp'.")
 (defun elza-browser ()
   "Elza Browser"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./ElzaBrowser.Setup.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./ElzaBrowser.Setup.AppImage" nil 0))
 
 (defun netsurf ()
   "NetSurf Browser"
@@ -499,7 +586,7 @@ Copy of variable `browse-url-button-regexp'.")
 (defun freetube ()
   "FreeTube"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./freetube_0.13.2_amd64.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./freetube_0.13.2_amd64.AppImage" nil 0))
 
 (defun handbrake ()
   "HandBrake Encoder"
@@ -509,69 +596,69 @@ Copy of variable `browse-url-button-regexp'.")
 (defun xonotic ()
   "Xonotic Shooter Game"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/Xonotic/./xonotic-linux64-glx"))
+  (call-process-shell-command "~/.local/bin/Xonotic/./xonotic-linux64-glx"))
 
 ;; Twitch Streams
 
 (defun summit1g ()
   "Summit1G Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/summit1g 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/summit1g 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun cdnthe3rd ()
   "CDNThe3rd Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/cdnthe3rd 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/cdnthe3rd 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun sodapoppin ()
   "Sodapoppin Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/sodapoppin 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/sodapoppin 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun pokelawls ()
   "Pokelawls Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/pokelawls 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/pokelawls 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun shroud ()
   "Shroud Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/shroud 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/shroud 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun valorant ()
   "Valorant Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/valorant 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/valorant 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun adeptthebest ()
   "Mari-Posa (adeptthebest) Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/adeptthebest 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/adeptthebest 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun kyle ()
   "Kyle Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/kyle 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/kyle 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun timmac ()
   "Timmac Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/timmac 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/timmac 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun whippy ()
   "Whippy Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/whippy 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/whippy 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun biotoxz_ ()
   "Biotoxz_ Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/biotoxz_ 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/biotoxz_ 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun xqc ()
   "xQc Twitch Stream"
   (interactive)
-  (call-process-shell-command "/home/danrobi/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/xqcow 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/xqcow 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 ;; Package List
 (custom-set-variables
@@ -580,7 +667,7 @@ Copy of variable `browse-url-button-regexp'.")
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(emacs-emoji-cheat-sheet emoji-cheat-sheet-plus emojify auto-package-update ctrlf marginalia use-package exwm elpher elfeed)))
+   '(aggressive-indent sudo-edit emacs-emoji-cheat-sheet emoji-cheat-sheet-plus emojify auto-package-update ctrlf marginalia use-package exwm elpher elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
