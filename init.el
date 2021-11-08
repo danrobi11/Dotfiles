@@ -3,13 +3,13 @@
                         (message "Value for %s getting modified to %s with %s in buffer %s"
                                  sym new-value operation where)))
 
-;;(require 'package)
-;;(add-to-list 'package-archives
-;;	     '("melpa" . "https://melpa.org/packages/")) ;;  (add-to-list approach preserves the default gnu elpa value in the list as well)
-;;(package-refresh-contents)
-(package-initialize)
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
+;; (require 'package)
+;; (add-to-list 'package-archives
+;; 	     '("melpa" . "https://melpa.org/packages/")) ;;  (add-to-list approach preserves the default gnu elpa value in the list as well)
+;; (package-refresh-contents)
+;; (package-initialize)
+;; (unless (package-installed-p 'use-package)
+;;   (package-install 'use-package))
 
 ;; Set frame transparency
 (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
@@ -23,6 +23,7 @@
 (use-package exwm ;; require xelb
   :ensure t
   :init
+  (setq exwm-init 't) ;; start exwm init 
   :config
   ;;  (exwm-enable)
   ;;  (require 'exwm)
@@ -42,6 +43,16 @@
   (start-process-shell-command
    "feh" nil  "feh --bg-scale /usr/share/backgrounds/desktop-background-girl.darked.png"))
 (efs/set-wallpaper)
+
+;;(setq exwm-randr-workspace-monitor-plist '(0 "eDP-1"
+;;                                             1 "DP-1-1"
+;;                                             2 "DP-1-3"))
+;;  (add-hook 'exwm-randr-screen-change-hook
+;;            (lambda ()
+;;              (start-process-shell-command
+;;               "xrandr" nil "xrandr --output DP-1-3 --right-of eDP-1 --output DP-1-1 --left-of eDP-1")))
+;;  # 1920x1080 @ 60.00 Hz (GTF) hsync: 67.08 kHz; pclk: 172.80 MHz
+;;  Modeline "1920x1080_60.00"  172.80  1920 2040 2248 2576  1080 1081 1084 1118  -HSync +Vsync
 
 
 ;; Elfeed is a web feed client for Emacs
@@ -63,14 +74,14 @@
     (elfeed-search-update :force))) ; redraw
 
 (use-package erc
-  :ensure nil
-  :init
+  :ensure t
   :config
   (load (expand-file-name "~/.emacs.d/.ercrc.el"))
   (erc-notify-mode) ;; notification in mode-line
   (erc-notifications-mode) ;; desktop notification
   (setq erc-hide-list '("JOIN" "PART" "QUIT"))
   (setq erc-fill-column '200)
+  (setq erc-fill-static-center 27) ;; need to test this
   (setq-default erc-default-server "irc.libera.chat")
   ;;  (setq erc-header-line '0)
   (erc-fill-mode)
@@ -78,7 +89,6 @@
 
 (use-package elpher
   :ensure t
-  :init
   :config
   (setq elpher-gemini-max-fill-width '200))
 
@@ -133,11 +143,40 @@
 (use-package aggressive-indent
   :ensure t
   :init
-  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
   :config
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
   (global-aggressive-indent-mode))
 
-;;(use-package amx ;; require ido-completing-read+
+(use-package helm
+  :ensure t
+  :config
+  (setq helm-buffer-max-lenght '70) ;; helm-buffers-list max lenght
+  (helm-mode))
+
+(use-package dired-hide-dotfiles
+  :ensure t)
+
+(use-package ytdl
+  :ensure t
+  :config
+  (setq ytdl-download-extra-args '-f18)
+  (setq ytdl-video-folder "~/Videos-Youtube-Downloads")
+  (setq ytdl-title-column-width '90)
+  (setq ytdl-always-query-default-filename t)) ;; query default filenme from teh web server, without confirmation
+;;  :bind (("C-x y" . ytdl-download))) ;; working**
+
+;; Hide the dotfile in dired. Hiden files
+(defun my-dired-mode-hook ()
+  "My `dired' mode hook."
+  ;; To hide dot-files by default
+  (dired-hide-dotfiles-mode))
+
+;; To toggle hiding
+(define-key dired-mode-map "." #'dired-hide-dotfiles-mode)
+(add-hook 'dired-mode-hook #'my-dired-mode-hook)
+;; End
+
+;;(Videos-Youtube-Downloadsuse-package amx ;; require ido-completing-read+
 ;;  :ensure t
 ;;  :init
 ;;  :config)
@@ -152,6 +191,7 @@
 ;;(setq fringe-styles '("no-fringes" . 0))
 ;;(setq 'fringe-styles '("no-fringes" . 0))
 (delete-selection-mode)
+(server-start)
 ;;(face-spec-set 'vertical-border '((t :inherit modeline)))
 (face-spec-set 'mode-line-inactive '((t :inherit modeline)))
 (face-spec-set 'mode-line-inactive '((t (:box))))
@@ -162,7 +202,7 @@
 ;;(ido-everywhere 1)
 ;;(ido-ubiquitous-mode 1)
 (setq line-move-visual nil) ;; move up/down line with softwrap
-(setq ido-separator "\n") ;; display ido buffer vertically
+;;(setq ido-separator "\n") ;; display ido buffer vertically
 (global-hl-line-mode 1)
 (global-visual-line-mode 1)
 (global-display-line-numbers-mode 1)
@@ -177,6 +217,7 @@
 (menu-bar-mode -1)
 (pixel-scroll-mode -1)
 (global-auto-revert-mode 1)
+(setq dired-listing-switches "-alh") ;; dired file size in mb
 (setq display-time-day-and-date 1)
 (setq display-time-default-load-average 'nil)
 (setq mode-line-in-non-selected-windows 't)
@@ -188,6 +229,11 @@
 (setq async-shell-command-buffer 'new-buffer)
 (setq url-privacy-level 'paranoid) ;; eww don’t send anything
 (setq exwm-manage-force-tiling 't) ;; prevent apps to launch in floating buffer
+(setq max-mini-window-height '100)
+
+;; disable the async-shell-command popup buffer
+(add-to-list 'display-buffer-alist
+	     (cons "\\*Async Shell Command\\*.*" (cons #'display-buffer-no-window nil)))
 
 ;; ibuffer display name only
 (setq ibuffer-formats '((mark " " name)
@@ -238,29 +284,28 @@
   (set-face-foreground #'mode-line-inactive "snow")
   (set-face-background #'mode-line "SlateBlue4")
   (set-face-foreground #'mode-line "snow")
-  (set-face-foreground #'vertical-border "black")
   (set-background-color "black")
   (set-foreground-color "snow"))
 
 ;; (:background "blue-violet" :foreground "snow" :box "0" :weight "ultra-light" :height "0.9"))
 
 ;; set env path
-(setq exec-path '("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/share" "/var/lib/" "~/" "~/.local/bin"))
+(setq exec-path '("/usr/local/bin" "/usr/bin" "/bin" "/usr/local/games" "/usr/games" "/usr/share" "/var/lib/" "~/" "~/.local/bin" "~/.guix-profile" "/etc/profile" "/gnu/store/16lzrmanm6x04ziqywv94p5xxfziljpx-flatpak-1.10.2/bin"))
 
 ;; protesilaos stuff
 ;; https://protesilaos.com/codelog/2021-07-24-emacs-misc-custom-commands/ 
 ;;Xah file backup
 (defun xah-make-backup ()
   "Make a backup copy of current file or dired marked files.
-If in dired, backup current file or marked files.
-The backup file name is in this format
- x.html~2018-05-15_133429~
- The last part is hour, minutes, seconds.
-in the same dir. If such a file already exist, it's overwritten.
-If the current buffer is not associated with a file, nothing's done.
+  If in dired, backup current file or marked files.
+  The backup file name is in this format
+  x.html~2018-05-15_133429~
+  The last part is hour, minutes, seconds.
+  in the same dir. If such a file already exist, it's overwritten.
+  If the current buffer is not associated with a file, nothing's done.
 
-URL `http://ergoemacs.org/emacs/elisp_make-backup.html'
-Version 2018-05-15"
+  URL `http://ergoemacs.org/emacs/elisp_make-backup.html'
+  Version 2018-05-15"
   (interactive)
   (let (($fname (buffer-file-name))
 	($date-time-format "%Y-%m-%d_%H%M%S"))
@@ -284,7 +329,7 @@ Version 2018-05-15"
 ;;;###autoload
 (defun prot-simple-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
-Do not try to make a new directory or anything fancy."
+  Do not try to make a new directory or anything fancy."
   (interactive
    (list (read-string "Rename current file: " (buffer-file-name))))
   (let ((file (buffer-file-name)))
@@ -295,8 +340,8 @@ Do not try to make a new directory or anything fancy."
 
 (defun prot-diff-buffer-dwim (&optional arg)
   "Diff buffer with its file's last saved state, or run `vc-diff'.
-With optional prefix ARG (\\[universal-argument]) enable
-highlighting of word-wise changes (local to the current buffer)."
+  With optional prefix ARG (\\[universal-argument]) enable
+  highlighting of word-wise changes (local to the current buffer)."
   (interactive "P")
   (let ((buf))
     (if (buffer-modified-p)
@@ -320,17 +365,17 @@ highlighting of word-wise changes (local to the current buffer)."
    "\\(//[-a-z0-9_.]+:[0-9]*\\)?"
    (let ((chars "-a-z0-9_=#$@~%&*+\\/[:word:]")
 	 (punct "!?:;.,"))
-     (concat
-      "\\(?:"
-      ;; Match paired parentheses, e.g. in Wikipedia URLs:
-      ;; http://thread.gmane.org/47B4E3B2.3050402@gmail.com
-      "[" chars punct "]+" "(" "[" chars punct "]+" ")"
-      "\\(?:" "[" chars punct "]+" "[" chars "]" "\\)?"
-      "\\|"
-      "[" chars punct "]+" "[" chars "]"
-      "\\)"))
-   "\\)")
-  "Regular expression that matches URLs.
+	 (concat
+	  "\\(?:"
+	  ;; Match paired parentheses, e.g. in Wikipedia URLs:
+	  ;; http://thread.gmane.org/47B4E3B2.3050402@gmail.com
+	  "[" chars punct "]+" "(" "[" chars punct "]+" ")"
+	  "\\(?:" "[" chars punct "]+" "[" chars "]" "\\)?"
+	  "\\|"
+	  "[" chars punct "]+" "[" chars "]"
+	  "\\)"))
+  "\\)")
+      "Regular expression that matches URLs.
 Copy of variable `browse-url-button-regexp'.")
 
 (autoload 'goto-address-mode "goto-addr")
@@ -342,14 +387,6 @@ Copy of variable `browse-url-button-regexp'.")
   (occur prot-common-url-regexp "\\&")
   (remove-hook 'occur-hook #'goto-address-mode))
 ;; end of prot stuff
-
-(defun efs/set-wallpaper ()
-  (interactive)
-  ;; NOTE: You will need to update this to a valid background path!
-  (start-process-shell-command
-   "feh" nil  "feh --bg-scale /usr/share/backgrounds/mxfb-AKS-red.jpg"))
-
-(efs/set-wallpaper)
 
 ;; clean-exit show unsaved file in list when closing emacs
 ;; https://old.reddit.com/r/emacs/comments/p04680/list_unsaved_buffers_before_exiting_emacs/
@@ -397,6 +434,94 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (lisp-interaction-mode))
 ;; end of the crux stuff
 
+;; copy the whole line
+(defun copy-line (arg)
+  "Copy lines (as many as prefix argument) in the kill ring"
+  (interactive "p")
+  (kill-ring-save (line-beginning-position)
+                  (line-beginning-position (+ 1 arg)))
+  (message "%d line%s copied" arg (if (= 1 arg) "" "s")))
+;; end of copy whole line
+
+;; oantolin stuff
+;; Open file externally with the system's default application
+;; https://old.reddit.com/r/emacs/comments/paqvav/how_to_open_different_types_of_file_with_one/
+(defun open-file-externally (file)
+  (interactive)
+  "Open FILE externally"
+  (call-process (pcase system-type
+                  (_ "xdg-open"))
+                nil 0 nil
+                (expand-file-name file)))
+
+(defun dired-open-externally (&optional arg)
+  "Open marked or current file in operating system's default application."
+  (interactive "P")
+  (dired-map-over-marks
+   (open-file-externally (dired-get-filename))
+   arg))
+;; end of the oantolin stuff
+
+;; Pennersr Proctrack-mode
+;; https://gitlab.com/pennersr/proctrack-mode
+
+(make-variable-buffer-local
+ (defvar proctrack-timer nil
+   "TODO"))
+
+
+(defun proctrack-child-process (pid)
+  (let ((cpids (--filter (eq pid (cdr (assoc 'ppid (process-attributes it))))
+                         (list-system-processes))))
+    (if cpids (car cpids) pid)))
+
+
+(defun proctrack-get-name (buffer)
+  (let ((proc (get-buffer-process (buffer-name buffer))))
+    (format "*%s*" (if proc (cdr (assoc 'args (process-attributes (proctrack-child-process
+                                                                   (process-id proc)))))
+                     "unknown"))))
+
+(defun proctrack-on-timer (buffer)
+  (if (buffer-live-p buffer)
+      (with-current-buffer buffer (rename-buffer (proctrack-get-name buffer) t))
+    (when proctrack-timer (cancel-timer proctrack-timer)) ))
+
+
+(defun proctrack-cancel-timer ()
+  (when proctrack-timer (cancel-timer proctrack-timer))
+  (setq proctrack-timer nil))
+
+(defun proctrack-enable ()
+  (let* (;; Should have just been this:
+         ;;  (setq proctrack-timer  (run-with-idle-timer 1 t 'proctrack-on-timer (current-buffer) ))
+         ;; Due to...
+         ;;     https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51589
+         ;; ... term-mode-hooks get excuted twice, meaning, our `proctrack-enable` gets
+         ;; executed twice and so far I cannot find a proper way to stop the duped timers...
+         (buffer (current-buffer))
+         (fns (make-symbol "local-idle-timer"))
+         (timer (run-with-idle-timer 1 t fns buffer ))
+         (fn `(lambda (buffer)
+                (if (not (buffer-live-p buffer))
+                    (cancel-timer ,timer)
+                  (proctrack-on-timer buffer)))))
+    (fset fns fn))
+  (add-hook 'kill-buffer-hook 'proctrack-cancel-timer))
+
+
+(defun proctrack-disable ()
+  (proctrack-cancel-timer))
+
+
+(define-minor-mode proctrack-mode "TODO"
+  :lighter " ptrk"
+  :init-value nil
+  (if proctrack-mode (proctrack-enable)
+    (proctrack-disable)))
+;; 
+;; End of Pennersr Proctrack-Mode
+
 ;; Keybinds
 ;; Personal Prefix-Command (kbd "C-z")
 (define-prefix-command 'z-map)
@@ -409,10 +534,15 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (define-key 'z-map (kbd "n") 'prot-simple-rename-file-and-buffer)
 (define-key 'z-map (kbd "r") 'prot-search-occur-urls)
 (define-key 'z-map (kbd "p") 'prot-diff-buffer-dwim) ;; show new edited stuff in the file (before saving)
+(define-key 'z-map (kbd "R") 'replace-regexp)
+(define-key 'z-map (kbd "m") 'memory-usage)
+(define-key 'z-map (kbd "c") 'cpu-usage)
+(define-key 'z-map (kbd "y") 'ytdl-download)
 
-;;(global-set-key (kbd "<s-up>") 'windmove-up)
+;;(https://gitlab.com/pennersr/proctrack-modeglobal-set-key (kbd "<s-up>") 'windmove-up)
 ;;(global-set-key (kbd "<s-down>") 'windmove-down)
 (global-set-key (kbd "C-x b") 'ido-switch-buffer)
+(global-set-key (kbd "C-x C-c") 'clean-exit)
 ;;(global-set-key (kbd "C-x b") 'helm-buffers-list)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (global-set-key (kbd "M-w") 'clipboard-kill-ring-save) ;; copy
@@ -437,8 +567,10 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (global-set-key (kbd "C-x f") 'exwm-floating-toggle-floating)
 (global-set-key (kbd "C-M-x") 'eval-defun)
 (global-set-key (kbd "C-x e") 'elfeed) ;; open elfeed
+(global-set-key (kbd "<f9>") 'dired-open-externally) ;; oantolin stuff
+(global-set-key (kbd "<M-esc esc>") 'keyboard-escape-quit)
 ;;(define-key (current-global-map) (kbd "<insert>") 'other-window)
-;;(global-set-key (kbd "<insert>") (lambda() 'other-window))
+;;(keyboard-escape-quitglobal-set-key (kbd "<insert>") (lambda() 'other-window))
 ;;(set-face-attribute 'org-table nil
 ;;       :inherit: fixed-pitch))
 ;;(global-set-key (kbd "s") "s" #'ignore)
@@ -468,20 +600,35 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (interactive)
   (completing-read "History" (with-temp-buffer (insert-file-contents "~/.bash_history") (split-string (buffer-string) "\n" t))))
 
-(defun flameshot ()
-  "Flameshot AppImage"
+(defun appimagepool ()
+  "AppImagePool Store"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./Flameshot-0.10.1.x86_64.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./appimagepool-x86_64.AppImage" nil 0))
+
+(defun cpu-usage ()
+  "Display CPU Usage"
+  (interactive)
+  (shell-command "/usr/bin/mpstat & . display-message"))
+
+(defun memory-usage ()
+  "Display Memory Usage"
+  (interactive)
+  (shell-command "/usr/bin/free -h . display-message"))
+
+		 (defun flameshot ()
+		   "Flameshot AppImage"
+		   (interactive)
+		   (call-process-shell-command "~/.local/bin/./Flameshot-0.10.1.x86_64.AppImage" nil 0))
 
 (defun vieb ()
   "Vieb Browser AppImage"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./Vieb-5.3.0.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./Vieb-6.1.0.AppImage" nil 0))
 
 (defun lbry ()
   "LBRY AppImage"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./LBRY_0.51.1.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./LBRY_0.51.2.AppImage" nil 0))
 
 (defun qtox ()
   "qTox AppImage"
@@ -546,7 +693,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun twitch ()
   "Twitch AppImage"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-twitch-gui-v1.12.0-x86_64.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-twitch-gui-v1.13.0-x86_64.AppImage" nil 0))
 
 (defun caffeine-indicator ()
   "caffeine-indicator"
@@ -568,10 +715,20 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (interactive)
   (call-process-shell-command "/usr/bin/./netsurf" nil 0))
 
+(defun firefox ()
+  "Firefox"
+  (interactive)
+  (call-process-shell-command "/usr/bin/firefox" nil 0))
+
+(defun palemoon ()
+  "Palemoon"
+  (interactive)
+  (call-process-shell-command "~/.local/bin/palemoon/palemoon" nil 0))
+
 (defun qbittorrent ()
   "qBittorrent"
   (interactive)
-  (call-process-shell-command "flatpak run org.qbittorrent.qBittorrent" nil 0))
+  (call-process-shell-command "/usr/bin/qbittorrent" nil 0))
 
 (defun geary ()
   "Geary"
@@ -586,12 +743,22 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun freetube ()
   "FreeTube"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./freetube_0.13.2_amd64.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./freetube_0.15.0_amd64.AppImage" nil 0))
 
 (defun handbrake ()
   "HandBrake Encoder"
   (interactive)
   (call-process-shell-command "/usr/bin/handbrake" nil 0))
+
+(defun nyxt ()
+  "Nyxt Browser"
+  (interactive)
+  (call-process-shell-command "/gnu/store/b4dmv2an5fhf5q8hx8j8clgf4i45vqnv-nyxt-2.1.1/bin/./nyxt" nil 0))
+
+(defun epiphany ()
+  "Gnome Web"
+  (interactive)
+  (call-process-shell-command "/gnu/store/ashpf9q7hqmdwxzcv20na5jwry2w99na-epiphany-3.34.4/bin/./epiphany" nil 0))
 
 (defun xonotic ()
   "Xonotic Shooter Game"
@@ -608,57 +775,57 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun cdnthe3rd ()
   "CDNThe3rd Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/cdnthe3rd 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/cdnthe3rd 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun sodapoppin ()
   "Sodapoppin Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/sodapoppin 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/sodapoppin 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun pokelawls ()
   "Pokelawls Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/pokelawls 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/pokelawls 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun shroud ()
   "Shroud Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/shroud 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/shroud 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun valorant ()
   "Valorant Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/valorant 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/valorant 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun adeptthebest ()
   "Mari-Posa (adeptthebest) Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/adeptthebest 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/adeptthebest 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun kyle ()
   "Kyle Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/kyle 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/kyle 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun timmac ()
   "Timmac Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/timmac 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/timmac 480p --stdout | ~/.local/bin/SMPlayer-21.10.0-x86_64.AppImage /dev/stdin" nil 0))
 
 (defun whippy ()
   "Whippy Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/whippy 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/whippy 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 (defun biotoxz_ ()
   "Biotoxz_ Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/biotoxz_ 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/biotoxz_ 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun xqc ()
   "xQc Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/xqcow 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/xqcow 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
 
 ;; Package List
 (custom-set-variables
@@ -667,7 +834,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(aggressive-indent sudo-edit emacs-emoji-cheat-sheet emoji-cheat-sheet-plus emojify auto-package-update ctrlf marginalia use-package exwm elpher elfeed)))
+   '(ytdl dired-hide-dotfiles aggressive-indent sudo-edit emacs-emoji-cheat-sheet emoji-cheat-sheet-plus emojify auto-package-update ctrlf marginalia use-package exwm elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
