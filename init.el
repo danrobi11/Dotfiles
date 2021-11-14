@@ -150,19 +150,21 @@
 (use-package helm
   :ensure t
   :config
-  (setq helm-buffer-max-lenght '70) ;; helm-buffers-list max lenght
+  (setq helm-buffer-max-length '40) ;; helm-buffers-list max length
   (helm-mode))
 
 (use-package dired-hide-dotfiles
   :ensure t)
 
-(use-package ytdl
-  :ensure t
-  :config
-  (setq ytdl-download-extra-args '-f18)
-  (setq ytdl-video-folder "~/Videos-Youtube-Downloads")
-  (setq ytdl-title-column-width '90)
-  (setq ytdl-always-query-default-filename t)) ;; query default filenme from teh web server, without confirmation
+;; (use-package ytdl
+;;   :ensure t
+;;   :config
+;;   (setq ytdl-command "/usr/bin/yt-dlp")
+;;   (setq ytdl-download-extra-args '("--format" "18"))
+;;   (setq ytdl-video-folder "/home/danrobi/Videos-Youtube-Downloads")
+;;   (setq ytdl-title-column-width '90)
+;;   (setq ytdl-always-query-default-filename t))
+;; query default filenme from teh web server, without confirmation
 ;;  :bind (("C-x y" . ytdl-download))) ;; working**
 
 ;; Hide the dotfile in dired. Hiden files
@@ -176,7 +178,13 @@
 (add-hook 'dired-mode-hook #'my-dired-mode-hook)
 ;; End
 
-;;(Videos-Youtube-Downloadsuse-package amx ;; require ido-completing-read+
+;; epithet rename eww buffer to title
+(add-to-list 'load-path "/home/danrobi/.emacs.d/epithet")
+(require 'epithet)
+(add-hook 'eww-after-render-hook #'epithet-rename-buffer)
+;; end of epithet
+
+;;(videos-Youtube-Downloadsuse-package amx ;; require ido-completing-read+
 ;;  :ensure t
 ;;  :init
 ;;  :config)
@@ -214,6 +222,7 @@
 (display-time-mode 1)
 (line-number-mode -1)
 (scroll-bar-mode -1)
+(helm-adaptive-mode 1)
 (menu-bar-mode -1)
 (pixel-scroll-mode -1)
 (global-auto-revert-mode 1)
@@ -375,7 +384,7 @@
 	  "[" chars punct "]+" "[" chars "]"
 	  "\\)"))
   "\\)")
-      "Regular expression that matches URLs.
+  "Regular expression that matches URLs.
 Copy of variable `browse-url-button-regexp'.")
 
 (autoload 'goto-address-mode "goto-addr")
@@ -522,6 +531,15 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 ;; 
 ;; End of Pennersr Proctrack-Mode
 
+;; shell-instead-dired
+;; Open the Dired current Directory In Shell Term
+(defun shell-instead-dired ()
+  (interactive)
+  (let ((dired-buffer (current-buffer)))
+    (shell (concat default-directory "-shell"))))
+
+;; End Of shell-instead-dired
+
 ;; Keybinds
 ;; Personal Prefix-Command (kbd "C-z")
 (define-prefix-command 'z-map)
@@ -537,7 +555,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (define-key 'z-map (kbd "R") 'replace-regexp)
 (define-key 'z-map (kbd "m") 'memory-usage)
 (define-key 'z-map (kbd "c") 'cpu-usage)
-(define-key 'z-map (kbd "y") 'ytdl-download)
+(define-key 'z-map (kbd "y") 'youtube-download)
 
 ;;(https://gitlab.com/pennersr/proctrack-modeglobal-set-key (kbd "<s-up>") 'windmove-up)
 ;;(global-set-key (kbd "<s-down>") 'windmove-down)
@@ -587,13 +605,20 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defalias 'asc 'async-shell-command)
 (defalias 'rb 'rename-buffer)
 (defalias 'otld 'org-toggle-link-display)
-
+(defalias 'you (lambda(arg) (interactive "sdfgfdg: ")(shell-command "/usr/bin/./yt-dlp -f18 -P/home/danrobi/Videos-Youtube-Downloads %s")))
 ;; Applications and Functions
-(global-set-key (kbd "C-x /") 'display-keybind-list)
+;; Download Youtube Videos
+(defun youtube-download (Y-URL)
+  "Download Youtube Video"
+  (interactive "sPaste YouTube URL: ")
+  (shell-command (format "%s %s" "/usr/bin/./yt-dlp -f18 -P~/Videos-Youtube-Downloads" Y-URL)))
+;; End Of Download Youtube Videos
+
 (defun display-keybind-list ()
   "Display keybinds list"
   (interactive)
   (call-process-shell-command "~/.local/bin/./emacs_keybind.sh" nil 0))
+(global-set-key (kbd "C-x /") 'display-keybind-list)
 
 (defun bash-history ()
   "Display All Bash History"
@@ -615,15 +640,15 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (interactive)
   (shell-command "/usr/bin/free -h . display-message"))
 
-		 (defun flameshot ()
-		   "Flameshot AppImage"
-		   (interactive)
-		   (call-process-shell-command "~/.local/bin/./Flameshot-0.10.1.x86_64.AppImage" nil 0))
+(defun flameshot ()
+  "Flameshot AppImage"
+  (interactive)
+  (call-process-shell-command "~/.local/bin/./Flameshot-0.10.1.x86_64.AppImage" nil 0))
 
 (defun vieb ()
   "Vieb Browser AppImage"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./Vieb-6.1.0.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./Vieb-6.2.0.AppImage" nil 0))
 
 (defun lbry ()
   "LBRY AppImage"
@@ -743,7 +768,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun freetube ()
   "FreeTube"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./freetube_0.15.0_amd64.AppImage" nil 0))
+  (call-process-shell-command "~/.local/bin/./freetube_0.15.1_amd64.AppImage" nil 0))
 
 (defun handbrake ()
   "HandBrake Encoder"
@@ -758,12 +783,17 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun epiphany ()
   "Gnome Web"
   (interactive)
-  (call-process-shell-command "/gnu/store/ashpf9q7hqmdwxzcv20na5jwry2w99na-epiphany-3.34.4/bin/./epiphany" nil 0))
+  (call-process-shell-command "/usr/bin/./epiphany" nil 0)) ;; /gnu/store/ashpf9q7hqmdwxzcv20na5jwry2w99na-epiphany-3.34.4/bin/./epiphany
 
 (defun xonotic ()
   "Xonotic Shooter Game"
   (interactive)
-  (call-process-shell-command "~/.local/bin/Xonotic/./xonotic-linux64-glx"))
+  (call-process-shell-command "~/.local/bin/Xonotic/./xonotic-linux64-glx" nil 0))
+
+(defun app-outlet ()
+  "AppImage Store"
+  (interactive)
+  (call-process-shell-command "~/.local/bin/./App.Outlet-2.0.2.AppImage" nil 0))
 
 ;; Twitch Streams
 
@@ -834,7 +864,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ytdl dired-hide-dotfiles aggressive-indent sudo-edit emacs-emoji-cheat-sheet emoji-cheat-sheet-plus emojify auto-package-update ctrlf marginalia use-package exwm elfeed)))
+   '(dired-hide-dotfiles aggressive-indent sudo-edit emacs-emoji-cheat-sheet emoji-cheat-sheet-plus emojify auto-package-update ctrlf marginalia use-package exwm elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
