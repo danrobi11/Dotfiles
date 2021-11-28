@@ -58,7 +58,6 @@
 ;; Elfeed is a web feed client for Emacs
 (use-package elfeed
   :ensure t
-  :init
   :config
   (load (expand-file-name "~/.elfeed/elfeed.el"))
   (setq-default elfeed-search-filter "@1-week-ago +unread ")
@@ -92,10 +91,10 @@
   :config
   (setq elpher-gemini-max-fill-width '200))
 
-;;(use-package selectrum
-;;  :ensure t
-;;  :init)
-;;  (selectrum-mode))
+(use-package selectrum
+  :ensure t
+  :init
+  (selectrum-mode))
 
 ;;(use-package counsel
 ;;  :ensure t
@@ -107,19 +106,19 @@
 ;;  :init)
 ;;  :bind (("<insert>" . ace-window)))
 
-(use-package emoji-cheat-sheet-plus
-  :ensure t
-  :init)
+;; (use-package emoji-cheat-sheet-plus
+;;   :ensure t
+;;   :init)
 
 ;;(use-package which-key
 ;;  :ensure t
 ;;  :init)
 
-(use-package emojify
-  :ensure t
-  :init
-  :config
-  (global-emojify-mode))
+;; (use-package emojify
+;;   :ensure t
+;;   :init
+;;   :config
+;;   (global-emojify-mode))
 
 (use-package ctrlf
   :ensure t
@@ -140,7 +139,7 @@
 (use-package sudo-edit
   :ensure t )
 
-(use-package aggressive-indent
+(use-package aggressive-indent ;; keep your code nicely aligned
   :ensure t
   :init
   :config
@@ -150,11 +149,8 @@
 (use-package helm
   :ensure t
   :config
-  (setq helm-buffer-max-length '40) ;; helm-buffers-list max length
-  (helm-mode))
-
-(use-package dired-hide-dotfiles
-  :ensure t)
+  (setq helm-buffer-max-length '40)) ;; helm-buffers-list max length
+;;  (helm-mode))
 
 ;; (use-package ytdl
 ;;   :ensure t
@@ -167,7 +163,12 @@
 ;; query default filenme from teh web server, without confirmation
 ;;  :bind (("C-x y" . ytdl-download))) ;; working**
 
+;; my-dired-mode-hook
 ;; Hide the dotfile in dired. Hiden files
+
+(use-package dired-hide-dotfiles
+  :ensure t)
+
 (defun my-dired-mode-hook ()
   "My `dired' mode hook."
   ;; To hide dot-files by default
@@ -176,13 +177,31 @@
 ;; To toggle hiding
 (define-key dired-mode-map "." #'dired-hide-dotfiles-mode)
 (add-hook 'dired-mode-hook #'my-dired-mode-hook)
-;; End
+;; End of my-dired-mode-hook
 
-;; epithet rename eww buffer to title
+;; Epithet
+;; Rename eww buffer to title
 (add-to-list 'load-path "/home/danrobi/.emacs.d/epithet")
 (require 'epithet)
 (add-hook 'eww-after-render-hook #'epithet-rename-buffer)
 ;; end of epithet
+
+;; symon
+;; display cpu and memory usage in the mini-buffer
+;; (add-to-list 'load-path "/home/danrobi/.emacs.d/symon")
+;; (require 'symon)
+;; (setq symon-sparkline-type 'plain)
+;; (setq symon-sparkline-thickness '1)
+;; (setq symon-sparkline-width '1)
+;; (symon-mode 1)
+;; end of symon
+
+;; awesome-tray
+;; display mode-line in the mini-buffer
+;; (add-to-list 'load-path "/home/danrobi/.emacs.d/awesome-tray")
+;; (setq awesome-tray-buffer-name-max-length '100)
+;; (require 'awesome-tray)
+;; (awesome-tray-mode 1)
 
 ;;(videos-Youtube-Downloadsuse-package amx ;; require ido-completing-read+
 ;;  :ensure t
@@ -201,14 +220,15 @@
 (delete-selection-mode)
 (server-start)
 ;;(face-spec-set 'vertical-border '((t :inherit modeline)))
+;; mode-line stuff
 (face-spec-set 'mode-line-inactive '((t :inherit modeline)))
 (face-spec-set 'mode-line-inactive '((t (:box))))
 (face-spec-set 'mode-line '((t (:box))))
+;; end of mode-line stuff
 (winner-mode 1)
 (fringe-mode 0)
-;;(ido-mode 1)
-;;(ido-everywhere 1)
-;;(ido-ubiquitous-mode 1)
+;; (ido-mode 1)
+;; (ido-everywhere 1)
 (setq line-move-visual nil) ;; move up/down line with softwrap
 ;;(setq ido-separator "\n") ;; display ido buffer vertically
 (global-hl-line-mode 1)
@@ -222,10 +242,16 @@
 (display-time-mode 1)
 (line-number-mode -1)
 (scroll-bar-mode -1)
-(helm-adaptive-mode 1)
+;;(helm-adaptive-mode 1)
+(recentf-mode 1) ;; display recently opened file from `find-file` "C-x C-f"
+;;(icomplete-mode 1)
+;;(fido-mode 1) ;; replacement for icomplete-mode
 (menu-bar-mode -1)
 (pixel-scroll-mode -1)
 (global-auto-revert-mode 1)
+;;(line-number-mode "") ;; display current line number in the mode-line
+;;(format-mode-line "%l")
+(display-battery-mode 0) ;; display battery charge level
 (setq dired-listing-switches "-alh") ;; dired file size in mb
 (setq display-time-day-and-date 1)
 (setq display-time-default-load-average 'nil)
@@ -431,7 +457,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 
 (defalias 'crux-delete-buffer-and-file #'crux-delete-file-and-buffer)
 
-(defun insert-date ()
+(defun insert-date-and-time ()
   "Insert a timestamp according to locale's date and time format."
   (interactive)
   (insert (format-time-string "%c" (current-time))))
@@ -471,7 +497,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
    arg))
 ;; end of the oantolin stuff
 
-;; Pennersr Proctrack-mode
+;; Pennersr Proctrack-mode ;; change shell buffer name
 ;; https://gitlab.com/pennersr/proctrack-mode
 
 (make-variable-buffer-local
@@ -537,8 +563,59 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (interactive)
   (let ((dired-buffer (current-buffer)))
     (shell (concat default-directory "-shell"))))
-
 ;; End Of shell-instead-dired
+
+(defun crux-create-scratch-buffer ()
+  "Create a new scratch buffer."
+  (interactive)
+  (let ((buf (generate-new-buffer "*scratch*")))
+    (switch-to-buffer buf)
+    (funcall initial-major-mode)))
+
+;; my-yank-pop
+;; replace the default yank-pop. It lets you choose in the kill-ring
+;; https://github.com/raxod502/selectrum/wiki/Useful-Commands#my-yank-pop
+;; Ref: https://www.gnu.org/software/emacs/manual/html_node/eintr/yank.html
+(defun my-yank-pop (&optional arg)
+  "Paste a previously killed string.
+With just \\[universal-argument] as ARG, put point at beginning,
+and mark at end.  Otherwise, put point at the end, and mark at
+the beginning without activating it.
+
+This is like `yank-pop'.  The differences are:
+
+- This let you manually choose a candidate to paste.
+
+- This doesn't delete the text just pasted if the previous
+  command is `yank'."
+  (interactive "P")
+  (let* ((selectrum-should-sort nil)
+         (text nil))
+    (setq text
+          (completing-read "Yank: "
+                           (cl-remove-duplicates
+                            kill-ring :test #'equal :from-end t)
+                           nil 'require-match))
+    (unless (eq last-command 'yank)
+      (push-mark))
+    (setq last-command 'yank)
+    (setq yank-window-start (window-start))
+    (when (and delete-selection-mode (use-region-p))
+      (delete-region (region-beginning) (region-end)))
+    (insert-for-yank text)
+    (if (consp arg)
+        (goto-char (prog1 (mark t)
+                     (set-marker (mark-marker) (point) (current-buffer)))))))
+;; end of my-yank-pop
+
+;; recentf-open-files+
+;; open recentf file with selectrum or ido.
+(defun recentf-open-files+ ()
+  "Use `completing-read' to open a recent file."
+  (interactive)
+  (let ((files (mapcar 'abbreviate-file-name recentf-list)))
+    (find-file (completing-read "Find recent file: " files nil t))))
+;; end of recentf-open-files+
 
 ;; Keybinds
 ;; Personal Prefix-Command (kbd "C-z")
@@ -555,7 +632,8 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (define-key 'z-map (kbd "R") 'replace-regexp)
 (define-key 'z-map (kbd "m") 'memory-usage)
 (define-key 'z-map (kbd "c") 'cpu-usage)
-(define-key 'z-map (kbd "y") 'youtube-download)
+(define-key 'z-map (kbd "y") 'youtube-download-360p)
+(define-key 'z-map (kbd "f") 'menu-find-file-existing)
 
 ;;(https://gitlab.com/pennersr/proctrack-modeglobal-set-key (kbd "<s-up>") 'windmove-up)
 ;;(global-set-key (kbd "<s-down>") 'windmove-down)
@@ -563,14 +641,15 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (global-set-key (kbd "C-x C-c") 'clean-exit)
 ;;(global-set-key (kbd "C-x b") 'helm-buffers-list)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
-(global-set-key (kbd "M-w") 'clipboard-kill-ring-save) ;; copy
+(global-set-key (kbd "M-w") 'selectrum-kill-ring-save) ;; clipboard-kill-ring-save -ring-saveYYY-ring-save
 (global-set-key (kbd "C-y") 'clipboard-yank) ;; paste
 (global-set-key (kbd "C-w") 'clipboard-kill-region) ;; cut
-(global-set-key (kbd "M-x") 'helm-M-x)
+;;(global-set-key (kbd "M-x") 'helm-M-x)
+(global-set-key (kbd "M-x") 'execute-extended-command)
 ;;(global-set-key (kbd "M-x") 'execute-extended-command)
-(global-set-key (kbd "C-x C-f") 'helm-find-files)
-;;(global-set-key (kbd "C-x C-f") 'find-file)
-(global-set-key (kbd "M-y") 'helm-show-kill-ring)
+;;(global-set-key (kbd "C-x C-f") 'helm-find-files)
+(global-set-key (kbd "C-x C-f") 'find-file)
+(global-set-key (kbd "M-y") 'my-yank-pop)
 ;;(global-set-key (kbd "M-y") 'counsel-yank-pop)
 (global-set-key (kbd "C-x t") 'erc-track-switch-buffer) ;; switch to next erc-buffer new message
 (global-set-key (kbd "C-c <left>") 'winner-undo)
@@ -580,7 +659,8 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (exwm-input-set-key (kbd "<s-up>") 'windmove-up)
 (exwm-input-set-key (kbd "<s-down>") 'windmove-down)
 ;;(exwm-input-set-key (kbd "s-z") 'ido-switch-buffer)
-(exwm-input-set-key (kbd "s-z") 'helm-buffers-list)
+(exwm-input-set-key (kbd "s-z") 'ibuffer)
+;;(exwm-input-set-key (kbd "s-z") 'helm-buffers-list)
 ;;(global-set-key (kbd "C-x w") 'ace-window)
 (global-set-key (kbd "C-x f") 'exwm-floating-toggle-floating)
 (global-set-key (kbd "C-M-x") 'eval-defun)
@@ -598,6 +678,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (global-set-key (kbd "C-x <f6>") (lambda() (interactive)(find-file "~/.emacs.d/init.el")))
 (global-set-key (kbd "C-x <f7>") (lambda() (interactive)(find-file "~/")))
 (global-set-key (kbd "C-x <f8>") (lambda() (interactive)(find-file "/media/danrobi/1tbstorage")))
+(global-set-key (kbd "C-x /") (lambda() (interactive)(find-file "/home/danrobi/.emacs.d/emacs_keybind.txt")))
 
 ;; Aliases
 (defalias 'oeh 'org-html-export-to-html)
@@ -605,20 +686,25 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defalias 'asc 'async-shell-command)
 (defalias 'rb 'rename-buffer)
 (defalias 'otld 'org-toggle-link-display)
-(defalias 'you (lambda(arg) (interactive "sdfgfdg: ")(shell-command "/usr/bin/./yt-dlp -f18 -P/home/danrobi/Videos-Youtube-Downloads %s")))
+
 ;; Applications and Functions
 ;; Download Youtube Videos
 (defun youtube-download (Y-URL)
   "Download Youtube Video"
   (interactive "sPaste YouTube URL: ")
-  (shell-command (format "%s %s" "/usr/bin/./yt-dlp -f18 -P~/Videos-Youtube-Downloads" Y-URL)))
+  (async-shell-command (format "/usr/bin/yt-dlp -P~/Videos-Youtube-Downloads %s" Y-URL)))
+
+(defun youtube-download-360p (Y-URL)
+  "Download Youtube Video"
+  (interactive "sPaste YouTube URL: ")
+  (async-shell-command (format "/usr/bin/yt-dlp -f18 -P~/Videos-Youtube-Downloads %s" Y-URL)))
 ;; End Of Download Youtube Videos
 
-(defun display-keybind-list ()
-  "Display keybinds list"
-  (interactive)
-  (call-process-shell-command "~/.local/bin/./emacs_keybind.sh" nil 0))
-(global-set-key (kbd "C-x /") 'display-keybind-list)
+;; (defun display-keybind-list ()
+;;   "Display keybinds list"
+;;   (interactive)
+;;   (call-process-shell-command "~/.local/bin/./emacs_keybind.sh" nil 0))
+;; (global-set-key (kbd "C-x /") 'display-keybind-list)
 
 (defun bash-history ()
   "Display All Bash History"
@@ -633,17 +719,22 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun cpu-usage ()
   "Display CPU Usage"
   (interactive)
-  (shell-command "/usr/bin/mpstat & . display-message"))
+  (shell-command "/usr/bin/mpstat")) ;; mpstat &
 
 (defun memory-usage ()
   "Display Memory Usage"
   (interactive)
-  (shell-command "/usr/bin/free -h . display-message"))
+  (shell-command "/usr/bin/free -t -h"))
 
 (defun flameshot ()
   "Flameshot AppImage"
   (interactive)
   (call-process-shell-command "~/.local/bin/./Flameshot-0.10.1.x86_64.AppImage" nil 0))
+
+(defun dunst ()
+  "Launch Dunst"
+  (interactive)
+  (call-process-shell-command "/usr/bin/dunst" nil 0))
 
 (defun vieb ()
   "Vieb Browser AppImage"
@@ -705,6 +796,11 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (interactive)
   (call-process-shell-command "/usr/bin/./volumeicon" nil 0))
 
+(defun unclutter ()
+  "Hide Mouse Cursor"
+  (interactive)
+  (call-process-shell-command "/usr/bin/./unclutter" nil 0))
+
 (defun kitty-terminal ()
   "kitty-terminal"
   (interactive)
@@ -738,7 +834,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun netsurf ()
   "NetSurf Browser"
   (interactive)
-  (call-process-shell-command "/usr/bin/./netsurf" nil 0))
+  (call-process-shell-command "flatpak run org.netsurf_browser.NetSurf" nil 0))
 
 (defun firefox ()
   "Firefox"
@@ -778,12 +874,12 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun nyxt ()
   "Nyxt Browser"
   (interactive)
-  (call-process-shell-command "/gnu/store/b4dmv2an5fhf5q8hx8j8clgf4i45vqnv-nyxt-2.1.1/bin/./nyxt" nil 0))
+  (call-process-shell-command "/usr/bin/nyxt" nil 0)) ;; "/gnu/store/b4dmv2an5fhf5q8hx8j8clgf4i45vqnv-nyxt-2.1.1/bin/./nyxt"
 
 (defun epiphany ()
   "Gnome Web"
   (interactive)
-  (call-process-shell-command "/usr/bin/./epiphany" nil 0)) ;; /gnu/store/ashpf9q7hqmdwxzcv20na5jwry2w99na-epiphany-3.34.4/bin/./epiphany
+  (call-process-shell-command "flatpak run org.gnome.Epiphany" nil 0)) ;; /gnu/store/ashpf9q7hqmdwxzcv20na5jwry2w99na-epiphany-3.34.4/bin/./epiphany
 
 (defun xonotic ()
   "Xonotic Shooter Game"
@@ -800,62 +896,62 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 (defun summit1g ()
   "Summit1G Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/summit1g 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-2.3.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/summit1g 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun cdnthe3rd ()
   "CDNThe3rd Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/cdnthe3rd 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/cdnthe3rd 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun sodapoppin ()
   "Sodapoppin Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/sodapoppin 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/sodapoppin 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun pokelawls ()
   "Pokelawls Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/pokelawls 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/pokelawls 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun shroud ()
   "Shroud Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/shroud 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/shroud 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun valorant ()
   "Valorant Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/valorant 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/valorant 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun adeptthebest ()
   "Mari-Posa (adeptthebest) Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/adeptthebest 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/adeptthebest 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun kyle ()
   "Kyle Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/kyle 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.3-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/kyle 360p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun timmac ()
   "Timmac Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/timmac 480p --stdout | ~/.local/bin/SMPlayer-21.10.0-x86_64.AppImage /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/timmac 480p --stdout | ~/.local/bin/SMPlayer-21.10.0-x86_64.AppImage /dev/stdin" nil 0))
 
 (defun whippy ()
   "Whippy Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/whippy 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "flatpak run io.mpv.Mpv --ytdl-format=360p https://www.twitch.tv/whippy" nil 0))
 
 (defun biotoxz_ ()
   "Biotoxz_ Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/biotoxz_ 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/biotoxz_ 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 (defun xqc ()
   "xQc Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-2.4.0-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/xqcow 480p --stdout | /usr/bin/mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.3-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/xqcow 360p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
 
 ;; Package List
 (custom-set-variables
@@ -863,8 +959,43 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ibuffer-saved-filter-groups nil)
+ '(ibuffer-saved-filters
+   '(("programming"
+      (or
+       (derived-mode . prog-mode)
+       (mode . ess-mode)
+       (mode . compilation-mode)))
+     ("text document"
+      (and
+       (derived-mode . text-mode)
+       (not
+	(starred-name))))
+     ("TeX"
+      (or
+       (derived-mode . tex-mode)
+       (mode . latex-mode)
+       (mode . context-mode)
+       (mode . ams-tex-mode)
+       (mode . bibtex-mode)))
+     ("web"
+      (or
+       (derived-mode . sgml-mode)
+       (derived-mode . css-mode)
+       (mode . javascript-mode)
+       (mode . js2-mode)
+       (mode . scss-mode)
+       (derived-mode . haml-mode)
+       (mode . sass-mode)))
+     ("gnus"
+      (or
+       (mode . message-mode)
+       (mode . mail-mode)
+       (mode . gnus-group-mode)
+       (mode . gnus-summary-mode)
+       (mode . gnus-article-mode)))))
  '(package-selected-packages
-   '(dired-hide-dotfiles aggressive-indent sudo-edit emacs-emoji-cheat-sheet emoji-cheat-sheet-plus emojify auto-package-update ctrlf marginalia use-package exwm elfeed)))
+   '(selectrum dired-hide-dotfiles aggressive-indent sudo-edit auto-package-update ctrlf marginalia use-package exwm elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
