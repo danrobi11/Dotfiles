@@ -91,10 +91,10 @@
   :config
   (setq elpher-gemini-max-fill-width '200))
 
-(use-package selectrum
-  :ensure t
-  :init
-  (selectrum-mode))
+;; (use-package selectrum
+;;   :ensure t
+;;   :init)
+;;  (selectrum-mode))
 
 ;;(use-package counsel
 ;;  :ensure t
@@ -126,11 +126,11 @@
   :config
   (ctrlf-mode))
 
-(use-package marginalia ;;  
-  :ensure t
-  :init
-  :config
-  (marginalia-mode))
+;; (use-package marginalia ;;  
+;;   :ensure t
+;;   :init
+;;   :config
+;;   (marginalia-mode))
 
 (use-package auto-package-update
   :ensure t
@@ -146,10 +146,10 @@
   (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
   (global-aggressive-indent-mode))
 
-(use-package helm
-  :ensure t
-  :config
-  (setq helm-buffer-max-length '40)) ;; helm-buffers-list max length
+;; (use-package helm
+;;   :ensure t
+;;   :config
+;;   (setq helm-buffer-max-length '40)) ;; helm-buffers-list max length
 ;;  (helm-mode))
 
 ;; (use-package ytdl
@@ -220,15 +220,10 @@
 (delete-selection-mode)
 (server-start)
 ;;(face-spec-set 'vertical-border '((t :inherit modeline)))
-;; mode-line stuff
-(face-spec-set 'mode-line-inactive '((t :inherit modeline)))
-(face-spec-set 'mode-line-inactive '((t (:box))))
-(face-spec-set 'mode-line '((t (:box))))
-;; end of mode-line stuff
 (winner-mode 1)
 (fringe-mode 0)
-;; (ido-mode 1)
-;; (ido-everywhere 1)
+(ido-mode 1)
+(ido-everywhere 1)
 (setq line-move-visual nil) ;; move up/down line with softwrap
 ;;(setq ido-separator "\n") ;; display ido buffer vertically
 (global-hl-line-mode 1)
@@ -245,7 +240,7 @@
 ;;(helm-adaptive-mode 1)
 (recentf-mode 1) ;; display recently opened file from `find-file` "C-x C-f"
 ;;(icomplete-mode 1)
-;;(fido-mode 1) ;; replacement for icomplete-mode
+(fido-mode 1) ;; replacement for icomplete-mode
 (menu-bar-mode -1)
 (pixel-scroll-mode -1)
 (global-auto-revert-mode 1)
@@ -253,7 +248,7 @@
 ;;(format-mode-line "%l")
 (display-battery-mode 0) ;; display battery charge level
 (setq dired-listing-switches "-alh") ;; dired file size in mb
-(setq display-time-day-and-date 1)
+;;(setq display-time-day-and-date 0)
 (setq display-time-default-load-average 'nil)
 (setq mode-line-in-non-selected-windows 't)
 (setenv "EDITOR" "emacsclient")
@@ -554,6 +549,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   :init-value nil
   (if proctrack-mode (proctrack-enable)
     (proctrack-disable)))
+;;(proctrack-mode 1)
 ;; 
 ;; End of Pennersr Proctrack-Mode
 
@@ -572,7 +568,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
     (switch-to-buffer buf)
     (funcall initial-major-mode)))
 
-;; my-yank-pop
+;; my-yank-pop ;; working with ido?
 ;; replace the default yank-pop. It lets you choose in the kill-ring
 ;; https://github.com/raxod502/selectrum/wiki/Useful-Commands#my-yank-pop
 ;; Ref: https://www.gnu.org/software/emacs/manual/html_node/eintr/yank.html
@@ -616,6 +612,36 @@ This is like `yank-pop'.  The differences are:
   (let ((files (mapcar 'abbreviate-file-name recentf-list)))
     (find-file (completing-read "Find recent file: " files nil t))))
 ;; end of recentf-open-files+
+(defface egoge-display-time
+  '((((type x w32 mac))
+     ;; #060525 is the background colour of my default face.
+     (:foreground "#060525" :inherit bold))
+    (((type tty))
+     (:foreground "blue")))
+  "Face used to display the time in the mode line.")
+;; My mode-line config
+
+(setq-default mode-line-format
+	      (list
+	       " %+ "
+	       "%b "
+	       "=> "
+	       "%f "
+	       "%o "
+	       "- "
+	       "[Mode:%m] "
+	       '(:eval (format-time-string "- %a %D %R"))))
+;; %a %b | %Y-%m-%d_%H%M%S | %b/%d/%Y %H:%M
+;;	       '(:eval (count-lines-page))))
+;;	       (force-mode-line-update t)))
+;; (setq display-time-string-forms
+;; 	    '((propertize (concat " " 24-hours ":" minutes " ")
+;; 			  'face 'egoge-display-time)))
+;;(display-time-format "%b/%d/%Y %H:%M"))) ;; format-time-string
+(face-spec-set 'mode-line-inactive '((t :inherit modeline)))
+(face-spec-set 'mode-line-inactive '((t (:box))))
+(face-spec-set 'mode-line '((t (:box))))
+;;end of my mode-line config
 
 ;; Keybinds
 ;; Personal Prefix-Command (kbd "C-z")
@@ -635,13 +661,13 @@ This is like `yank-pop'.  The differences are:
 (define-key 'z-map (kbd "y") 'youtube-download-360p)
 (define-key 'z-map (kbd "f") 'menu-find-file-existing)
 
-;;(https://gitlab.com/pennersr/proctrack-modeglobal-set-key (kbd "<s-up>") 'windmove-up)
+;;(global-set-key (kbd "<s-up>") 'windmove-up)
 ;;(global-set-key (kbd "<s-down>") 'windmove-down)
 (global-set-key (kbd "C-x b") 'ido-switch-buffer)
 (global-set-key (kbd "C-x C-c") 'clean-exit)
 ;;(global-set-key (kbd "C-x b") 'helm-buffers-list)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
-(global-set-key (kbd "M-w") 'selectrum-kill-ring-save) ;; clipboard-kill-ring-save -ring-saveYYY-ring-save
+(global-set-key (kbd "M-w") 'clipboard-kill-ring-save) ;; selectrum or clipboard-kill-ring-save -ring-saveYYY-ring-save
 (global-set-key (kbd "C-y") 'clipboard-yank) ;; paste
 (global-set-key (kbd "C-w") 'clipboard-kill-region) ;; cut
 ;;(global-set-key (kbd "M-x") 'helm-M-x)
@@ -659,7 +685,7 @@ This is like `yank-pop'.  The differences are:
 (exwm-input-set-key (kbd "<s-up>") 'windmove-up)
 (exwm-input-set-key (kbd "<s-down>") 'windmove-down)
 ;;(exwm-input-set-key (kbd "s-z") 'ido-switch-buffer)
-(exwm-input-set-key (kbd "s-z") 'ibuffer)
+(exwm-input-set-key (kbd "s-z") 'ido-switch-buffer) ;; ibuffer
 ;;(exwm-input-set-key (kbd "s-z") 'helm-buffers-list)
 ;;(global-set-key (kbd "C-x w") 'ace-window)
 (global-set-key (kbd "C-x f") 'exwm-floating-toggle-floating)
@@ -804,7 +830,7 @@ This is like `yank-pop'.  The differences are:
 (defun kitty-terminal ()
   "kitty-terminal"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./kitty" nil 0))
+  (call-process-shell-command "/usr/bin/./kitty" nil 0))
 
 (defun nm-applet ()
   "nm-applet"
@@ -890,6 +916,11 @@ This is like `yank-pop'.  The differences are:
   "AppImage Store"
   (interactive)
   (call-process-shell-command "~/.local/bin/./App.Outlet-2.0.2.AppImage" nil 0))
+
+(defun librewolf ()
+  "LibreWolf Browser"
+  (interactive)
+  (call-process-shell-command "~/.local/bin/./LibreWolf.x86_64.AppImage" nil 0))
 
 ;; Twitch Streams
 
@@ -995,7 +1026,7 @@ This is like `yank-pop'.  The differences are:
        (mode . gnus-summary-mode)
        (mode . gnus-article-mode)))))
  '(package-selected-packages
-   '(selectrum dired-hide-dotfiles aggressive-indent sudo-edit auto-package-update ctrlf marginalia use-package exwm elfeed)))
+   '(dired-hide-dotfiles aggressive-indent sudo-edit auto-package-update ctrlf use-package exwm elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
