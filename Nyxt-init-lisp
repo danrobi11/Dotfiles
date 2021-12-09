@@ -1,0 +1,82 @@
+;; https://github.com/aartaka/nyxt-config black theme
+;; nyxt with emacs: https://ag91.github.io/blog/2021/06/22/back-to-emacs-while-in-nyxt-how-to-edit-the-web-in-a-lispy-editor/
+;; https://github.com/jmercouris/configuration/blob/master/.config/nyxt/init.lisp#L9
+;;https://github.com/ericdrgn/drgn.nyxt
+
+(in-package #:nyxt-user)
+
+(define-configuration window
+  ((message-buffer-style
+    (str:concat
+     %slot-default%
+     (cl-css:css
+      '((body
+         :background-color "black"
+         :color "white")))))))
+
+(define-configuration prompt-buffer
+  ((style (str:concat
+           %slot-default%
+           (cl-css:css
+            '((body
+               :background-color "black"
+               :color "white")
+              ("#prompt-area"
+               :background-color "purple")
+              ("#input"
+               :background-color "white")
+              (".source-name"
+               :color "black"
+               :background-color "gray")
+              (".source-content"
+               :background-color "black")
+              (".source-content th"
+               :border "1px solid purple"
+               :background-color "black")
+              ("#selection"
+               :background-color "gray"
+               :color "black")
+              (.marked :background-color "#8B3A3A"
+                       :font-weight "bold"
+                       :color "white")
+              (.selected :background-color "black"
+                         :color "white")))))))
+
+(define-configuration status-buffer
+  ((style (str:concat 
+           %slot-default%
+           (cl-css:css
+            '(("#container"
+               ;; Columns: controls, url
+               :grid-template-columns "0% 10% 10% 80%")
+	      ("#controls"
+               :border-top "1px solid white")
+              ("#url"
+               :background-color "black"
+               :color "white"
+               :border-top "1px solid white")
+              ("#modes"
+               :background-color "black"
+               :border-top "1px solid white")
+              ("#tabs"
+               :background-color "black"
+               :color "black"
+               :border-top "1px solid white")))))))
+
+(define-configuration buffer
+  ;;If you want to reuse the default map,
+  ;;you can use %slot-default instead of (make-keymap ...)
+  ((override-map (define-key %slot-default%
+                   "S-x" 'execute-command
+                   "C-w" 'delete-current-buffer))))
+
+(define-configuration (buffer web-buffer)
+  ((default-modes (append %slot-default%
+			  ;;                         '(dark-mode)
+                          '(noscript-mode)
+			  ;;                         '(noimage-mode)
+                          '(reduce-tracking-mode)
+                          '(nosound-mode)
+         		  '(emacs-mode)
+                          '(nowebgl-mode)))))
+
