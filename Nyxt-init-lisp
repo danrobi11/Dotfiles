@@ -48,7 +48,7 @@
            (cl-css:css
             '(("#container"
                ;; Columns: controls, url
-               :grid-template-columns "0% 10% 10% 80%")
+               :grid-template-columns "0% 40% 0% 60%")
 	      ("#controls"
                :border-top "1px solid white")
               ("#url"
