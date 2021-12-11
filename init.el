@@ -226,6 +226,7 @@
 (ido-everywhere 1)
 (setq line-move-visual nil) ;; move up/down line with softwrap
 ;;(setq ido-separator "\n") ;; display ido buffer vertically
+(setq icomplete-separator "\t") ;; display icomplete/fido vertically or with https://github.com/oantolin/icomplete-vertical
 (global-hl-line-mode 1)
 (global-visual-line-mode 1)
 (global-display-line-numbers-mode 1)
@@ -249,7 +250,7 @@
 (display-battery-mode 0) ;; display battery charge level
 (setq dired-listing-switches "-alh") ;; dired file size in mb
 ;;(setq display-time-day-and-date 0)
-(setq display-time-default-load-average 'nil)
+(setq display-time-default-load-average "\n")
 (setq mode-line-in-non-selected-windows 't)
 (setenv "EDITOR" "emacsclient")
 (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; mouse scroll one line at a time
@@ -312,7 +313,7 @@
   (interactive)
   (set-face-background #'mode-line-inactive "black")
   (set-face-foreground #'mode-line-inactive "snow")
-  (set-face-background #'mode-line "SlateBlue4")
+  (set-face-background #'mode-line "purple") ;; SlateBlue4
   (set-face-foreground #'mode-line "snow")
   (set-background-color "black")
   (set-foreground-color "snow"))
@@ -621,6 +622,10 @@ This is like `yank-pop'.  The differences are:
   "Face used to display the time in the mode line.")
 ;; My mode-line config
 
+(defun cpu-memory-usage()
+  "Display CPU Usage"
+  (shell-command "free -t --mega | grep Mem | awk '{print $1,$7}' && ps -A -o pcpu | tail -n+2 | paste -sd+ | bc"))
+
 (setq-default mode-line-format
 	      (list
 	       " %+ "
@@ -630,7 +635,8 @@ This is like `yank-pop'.  The differences are:
 	       "%o "
 	       "- "
 	       "[Mode:%m] "
-	       '(:eval (format-time-string "- %a %D %R"))))
+	       '(:eval (format-time-string "- %a %D %R"))
+	       '(:eval (concat (cpu-memory-usage)))))
 ;; %a %b | %Y-%m-%d_%H%M%S | %b/%d/%Y %H:%M
 ;;	       '(:eval (count-lines-page))))
 ;;	       (force-mode-line-update t)))
@@ -660,6 +666,7 @@ This is like `yank-pop'.  The differences are:
 (define-key 'z-map (kbd "c") 'cpu-usage)
 (define-key 'z-map (kbd "y") 'youtube-download-360p)
 (define-key 'z-map (kbd "f") 'menu-find-file-existing)
+(define-key 'z-map (kbd "w") 'wdired-change-to-wdired-mode)
 
 ;;(global-set-key (kbd "<s-up>") 'windmove-up)
 ;;(global-set-key (kbd "<s-down>") 'windmove-down)
@@ -750,7 +757,7 @@ This is like `yank-pop'.  The differences are:
 (defun memory-usage ()
   "Display Memory Usage"
   (interactive)
-  (shell-command "/usr/bin/free -t -h"))
+  (shell-command "/usr/bin/free -t -m -h"))
 
 (defun flameshot ()
   "Flameshot AppImage"
@@ -1034,3 +1041,4 @@ This is like `yank-pop'.  The differences are:
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
