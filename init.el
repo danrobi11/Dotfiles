@@ -23,7 +23,7 @@
 (use-package exwm ;; require xelb
   :ensure t
   :init
-  (setq exwm-init 't) ;; start exwm init 
+  (setq exwm-init t) ;; start exwm init 
   :config
   ;;  (exwm-enable)
   ;;  (require 'exwm)
@@ -218,7 +218,7 @@
 ;;(setq fringe-styles '("no-fringes" . 0))
 ;;(setq 'fringe-styles '("no-fringes" . 0))
 (delete-selection-mode)
-(server-start)
+;;(server-start)
 ;;(face-spec-set 'vertical-border '((t :inherit modeline)))
 (winner-mode 1)
 (fringe-mode 0)
@@ -545,12 +545,11 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (proctrack-cancel-timer))
 
 
-(define-minor-mode proctrack-mode "TODO"
-  :lighter " ptrk"
-  :init-value nil
-  (if proctrack-mode (proctrack-enable)
-    (proctrack-disable)))
-;;(proctrack-mode 1)
+;; (define-minor-mode proctrack-mode "TODO"
+;;   :lighter " ptrk"
+;;   :init-value nil
+;;   (if proctrack-mode (proctrack-enable)
+;;     (proctrack-disable)))
 ;; 
 ;; End of Pennersr Proctrack-Mode
 
@@ -622,9 +621,10 @@ This is like `yank-pop'.  The differences are:
   "Face used to display the time in the mode line.")
 ;; My mode-line config
 
-(defun cpu-memory-usage()
+;; Display CPU/MEM usage in the mode line
+(defun cpu-memory-usage-3 ()
   "Display CPU Usage"
-  (shell-command "free -t --mega | grep Mem | awk '{print $1,$7}' && ps -A -o pcpu | tail -n+2 | paste -sd+ | bc"))
+  (shell-command-to-string "ps -A -o pcpu | tail -n+2 | paste -sd+ | bc && free -t --mega | grep Mem | awk '{print $1,$7}'"))
 
 (setq-default mode-line-format
 	      (list
@@ -635,11 +635,15 @@ This is like `yank-pop'.  The differences are:
 	       "%o "
 	       "- "
 	       "[Mode:%m] "
-	       '(:eval (format-time-string "- %a %D %R"))
-	       '(:eval (concat (cpu-memory-usage)))))
+	       '(:eval (format-time-string "- %a %D %R - "))
+	       "CPU: "
+	       '(:eval (cpu-memory-usage-3))))
+;; End of Display CPU/MEM usage in the mode line
+
+;;(force-mode-line-update 'all)))
+;;	       '(:eval (cpu-memory-usage)))))
 ;; %a %b | %Y-%m-%d_%H%M%S | %b/%d/%Y %H:%M
 ;;	       '(:eval (count-lines-page))))
-;;	       (force-mode-line-update t)))
 ;; (setq display-time-string-forms
 ;; 	    '((propertize (concat " " 24-hours ":" minutes " ")
 ;; 			  'face 'egoge-display-time)))
@@ -662,8 +666,8 @@ This is like `yank-pop'.  The differences are:
 (define-key 'z-map (kbd "r") 'prot-search-occur-urls)
 (define-key 'z-map (kbd "p") 'prot-diff-buffer-dwim) ;; show new edited stuff in the file (before saving)
 (define-key 'z-map (kbd "R") 'replace-regexp)
-(define-key 'z-map (kbd "m") 'memory-usage)
-(define-key 'z-map (kbd "c") 'cpu-usage)
+;;(define-key 'z-map (kbd "m") 'memory-usage)
+(define-key 'z-map (kbd "c") 'cpu-memory-usage)
 (define-key 'z-map (kbd "y") 'youtube-download-360p)
 (define-key 'z-map (kbd "f") 'menu-find-file-existing)
 (define-key 'z-map (kbd "w") 'wdired-change-to-wdired-mode)
@@ -749,15 +753,15 @@ This is like `yank-pop'.  The differences are:
   (interactive)
   (call-process-shell-command "~/.local/bin/./appimagepool-x86_64.AppImage" nil 0))
 
-(defun cpu-usage ()
-  "Display CPU Usage"
-  (interactive)
-  (shell-command "/usr/bin/mpstat")) ;; mpstat &
+;; (defun cpu-usage ()
+;;   "Display CPU Usage"
+;;   (interactive)
+;;   (shell-command "/usr/bin/mpstat")) ;; mpstat &
 
-(defun memory-usage ()
-  "Display Memory Usage"
-  (interactive)
-  (shell-command "/usr/bin/free -t -m -h"))
+;; (defun memory-usage ()
+;;   "Display Memory Usage"
+;;   (interactive)
+;;   (shell-command "/usr/bin/free -t -m -h"))
 
 (defun flameshot ()
   "Flameshot AppImage"
