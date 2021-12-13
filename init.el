@@ -622,7 +622,7 @@ This is like `yank-pop'.  The differences are:
 ;; My mode-line config
 
 ;; Display CPU/MEM usage in the mode line
-(defun cpu-memory-usage-3 ()
+(defun cpu-memory-usage ()
   "Display CPU Usage"
   (shell-command-to-string "ps -A -o pcpu | tail -n+2 | paste -sd+ | bc && free -t --mega | grep Mem | awk '{print $1,$7}'"))
 
@@ -637,7 +637,7 @@ This is like `yank-pop'.  The differences are:
 	       "[Mode:%m] "
 	       '(:eval (format-time-string "- %a %D %R - "))
 	       "CPU: "
-	       '(:eval (cpu-memory-usage-3))))
+	       '(:eval (cpu-memory-usage)))
 ;; End of Display CPU/MEM usage in the mode line
 
 ;;(force-mode-line-update 'all)))
