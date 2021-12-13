@@ -623,7 +623,7 @@ This is like `yank-pop'.  The differences are:
 
 ;; Display CPU/MEM usage in the mode line
 (defun cpu-memory-usage ()
-  "Display CPU Usage"
+  "Display CPU/MEM Usage"
   (shell-command-to-string "ps -A -o pcpu | tail -n+2 | paste -sd+ | bc && free -t --mega | grep Mem | awk '{print $1,$7}'"))
 
 (setq-default mode-line-format
