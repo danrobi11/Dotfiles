@@ -1,7 +1,7 @@
 (add-variable-watcher 'the-var-to-be-watched
-                      (lambda (sym new-value operation where)
-                        (message "Value for %s getting modified to %s with %s in buffer %s"
-                                 sym new-value operation where)))
+		      (lambda (sym new-value operation where)
+			(message "Value for %s getting modified to %s with %s in buffer %s"
+				 sym new-value operation where)))
 
 ;; (require 'package)
 ;; (add-to-list 'package-archives
@@ -257,7 +257,7 @@
 (setq scroll-conservatively '1) ;; keyboard scroll one line at the time
 (setq shr-inhibit-images '0) ;; disable displaying images in eww and elfeed
 (setq fill-region 'center)
-(setq async-shell-command-buffer 'new-buffer)
+;;(setq async-shell-command-buffer 'new-buffer)
 (setq url-privacy-level 'paranoid) ;; eww don’t send anything
 (setq exwm-manage-force-tiling 't) ;; prevent apps to launch in floating buffer
 (setq max-mini-window-height '100)
@@ -637,7 +637,7 @@ This is like `yank-pop'.  The differences are:
 	       "[Mode:%m] "
 	       '(:eval (format-time-string "- %a %D %R - "))
 	       "CPU: "
-	       '(:eval (cpu-memory-usage)))
+	       '(:eval (cpu-memory-usage))))
 ;; End of Display CPU/MEM usage in the mode line
 
 ;;(force-mode-line-update 'all)))
@@ -653,6 +653,24 @@ This is like `yank-pop'.  The differences are:
 (face-spec-set 'mode-line '((t (:box))))
 ;;end of my mode-line config
 
+
+;; Download Youtube Videos
+(defun mpv-youtube-360p (M-Y-360)
+  "Mpv Youtube 360p"
+  (interactive "sPaste YouTube URL: ")
+  (async-shell-command (format "flatpak run io.mpv.Mpv --ytdl-format=18 %s" M-Y-360)))
+
+(defun youtube-download (Y-URL)
+  "Download Youtube Video"
+  (interactive "sPaste YouTube URL: ")
+  (async-shell-command (format "/usr/bin/yt-dlp -P~/Videos-Youtube-Downloads %s" Y-URL)))
+
+(defun youtube-download-360p (Y-URL-360)
+  "Download Youtube Video"
+  (interactive "sPaste YouTube URL: ")
+  (async-shell-command (format "/usr/bin/yt-dlp -f18 -P~/Videos-Youtube-Downloads %s" Y-URL-360)))
+;; End Of Download Youtube Videos
+
 ;; Keybinds
 ;; Personal Prefix-Command (kbd "C-z")
 (define-prefix-command 'z-map)
@@ -667,6 +685,7 @@ This is like `yank-pop'.  The differences are:
 (define-key 'z-map (kbd "p") 'prot-diff-buffer-dwim) ;; show new edited stuff in the file (before saving)
 (define-key 'z-map (kbd "R") 'replace-regexp)
 ;;(define-key 'z-map (kbd "m") 'memory-usage)
+(define-key 'z-map (kbd "m") 'mpv-youtube-360p)
 (define-key 'z-map (kbd "c") 'cpu-memory-usage)
 (define-key 'z-map (kbd "y") 'youtube-download-360p)
 (define-key 'z-map (kbd "f") 'menu-find-file-existing)
@@ -725,17 +744,6 @@ This is like `yank-pop'.  The differences are:
 (defalias 'otld 'org-toggle-link-display)
 
 ;; Applications and Functions
-;; Download Youtube Videos
-(defun youtube-download (Y-URL)
-  "Download Youtube Video"
-  (interactive "sPaste YouTube URL: ")
-  (async-shell-command (format "/usr/bin/yt-dlp -P~/Videos-Youtube-Downloads %s" Y-URL)))
-
-(defun youtube-download-360p (Y-URL)
-  "Download Youtube Video"
-  (interactive "sPaste YouTube URL: ")
-  (async-shell-command (format "/usr/bin/yt-dlp -f18 -P~/Videos-Youtube-Downloads %s" Y-URL)))
-;; End Of Download Youtube Videos
 
 ;; (defun display-keybind-list ()
 ;;   "Display keybinds list"
@@ -1045,4 +1053,3 @@ This is like `yank-pop'.  The differences are:
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
