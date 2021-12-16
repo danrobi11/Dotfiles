@@ -624,20 +624,20 @@ This is like `yank-pop'.  The differences are:
 ;; Display CPU/MEM usage in the mode line
 (defun cpu-memory-usage ()
   "Display CPU/MEM Usage"
-  (shell-command-to-string "ps -A -o pcpu | tail -n+2 | paste -sd+ | bc && free -t --mega | grep Mem | awk '{print $1,$7}'"))
+  (shell-command-to-string "ps -A -o pcpu | tail -n+2 | paste -sd+ | bc | tr -cd '\40-\176' && echo ' '| tr -cd '\40-\176' && free -t --mega | grep Mem | awk '{print $1,$7}' | tr -cd '\40-\176'"))
 
-(setq-default mode-line-format
-	      (list
-	       " %+ "
-	       "%b "
-	       "=> "
-	       "%f "
-	       "%o "
-	       "- "
-	       "[Mode:%m] "
-	       '(:eval (format-time-string "- %a %D %R - "))
-	       "CPU: "
-	       '(:eval (cpu-memory-usage))))
+  (setq-default mode-line-format
+		(list
+		 " %+ "
+		 "%b "
+		 "=> "
+		 "%f "
+		 "%o "
+		 "- "
+		 "[Mode:%m] "
+		 '(:eval (format-time-string "- %a %D %R - "))
+		 "CPU: "
+		 '(:eval (cpu-memory-usage))))
 ;; End of Display CPU/MEM usage in the mode line
 
 ;;(force-mode-line-update 'all)))
@@ -658,17 +658,17 @@ This is like `yank-pop'.  The differences are:
 (defun mpv-youtube-360p (M-Y-360)
   "Mpv Youtube 360p"
   (interactive "sPaste YouTube URL: ")
-  (async-shell-command (format "flatpak run io.mpv.Mpv --ytdl-format=18 %s" M-Y-360)))
+  (start-process-shell-command "mpv" nil "mpv --ytdl-format=18" nil "%s" M-Y-360))
 
 (defun youtube-download (Y-URL)
   "Download Youtube Video"
   (interactive "sPaste YouTube URL: ")
-  (async-shell-command (format "/usr/bin/yt-dlp -P~/Videos-Youtube-Downloads %s" Y-URL)))
+  (start-process-shell-command "yt-dlp" nil "yt-dlp -P~/Videos-Youtube-Downloads" nil "%s" Y-URL))
 
 (defun youtube-download-360p (Y-URL-360)
   "Download Youtube Video"
   (interactive "sPaste YouTube URL: ")
-  (async-shell-command (format "/usr/bin/yt-dlp -f18 -P~/Videos-Youtube-Downloads %s" Y-URL-360)))
+  (start-process-shell-command "yt-dlp" nil "yt-dlp -f18 -P~/Videos-Youtube-Downloads" nil "%s" Y-URL-360))
 ;; End Of Download Youtube Videos
 
 ;; Keybinds
@@ -760,16 +760,6 @@ This is like `yank-pop'.  The differences are:
   "AppImagePool Store"
   (interactive)
   (call-process-shell-command "~/.local/bin/./appimagepool-x86_64.AppImage" nil 0))
-
-;; (defun cpu-usage ()
-;;   "Display CPU Usage"
-;;   (interactive)
-;;   (shell-command "/usr/bin/mpstat")) ;; mpstat &
-
-;; (defun memory-usage ()
-;;   "Display Memory Usage"
-;;   (interactive)
-;;   (shell-command "/usr/bin/free -t -m -h"))
 
 (defun flameshot ()
   "Flameshot AppImage"
@@ -1001,7 +991,7 @@ This is like `yank-pop'.  The differences are:
 (defun xqc ()
   "xQc Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-3.0.3-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/xqcow 360p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.3-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/xqcow 360p --stdout | mpv /dev/stdin" nil 0))
 
 ;; Package List
 (custom-set-variables
