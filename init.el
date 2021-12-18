@@ -648,7 +648,7 @@ This is like `yank-pop'.  The differences are:
 
 (setq mode-line-end-spaces
       (list
-       (propertize "CPU: " 'face 'bold)
+       (propertize "Cpu: " 'face 'bold)
        (propertize (cpu-memory-usage-3) 'face 'bold)
        " "))
 
