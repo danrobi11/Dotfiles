@@ -662,7 +662,6 @@ This is like `yank-pop'.  The differences are:
 	       " %+ "
 	       (propertize "%b " 'face 'bold)
 	       "=> "
-	       "%f "
 	       "%o "
 	       "- "
 	       "[Mode:%m] - "
