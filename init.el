@@ -648,8 +648,8 @@ This is like `yank-pop'.  The differences are:
 
 (setq mode-line-end-spaces
       (list
-       (propertize "Cpu: " 'face 'bold)
-       (propertize (cpu-memory-usage-3) 'face 'bold)
+       (propertize "CPU: " 'face 'bold)
+       '(:eval (propertize (cpu-memory-usage-3) 'face 'bold))
        " "))
 
 (defun my-mode-line/padding ()
@@ -666,7 +666,7 @@ This is like `yank-pop'.  The differences are:
 	       "%o "
 	       "- "
 	       "[Mode:%m] "
-	       (propertize (format-time-string "- %a %D %R") 'face 'bold)
+	       '(:eval (propertize (format-time-string "- %a %D %R") 'face 'bold))
 	       '(:eval (my-mode-line/padding))
 	       mode-line-end-spaces))
 ;; End of Display CPU/MEM usage in the mode line
