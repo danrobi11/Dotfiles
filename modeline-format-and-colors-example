@@ -1,4 +1,4 @@
-;; Screenshot here: 
+;; Screenshot here: https://github.com/danrobi11/Dotfiles/blob/main/emacs-modeline-format-colors-example.png
 (setq mode-line-end-spaces
       (list
        (propertize "Cpu: " 'face '(:foreground "orange" 'bold))
