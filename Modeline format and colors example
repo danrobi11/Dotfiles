@@ -1,0 +1,23 @@
+;; Screenshot here: 
+(setq mode-line-end-spaces
+      (list
+       (propertize "Cpu: " 'face '(:foreground "orange" 'bold))
+       '(:eval (propertize (cpu-memory-usage-3) 'face '(:foreground "green")))
+       " "))
+
+(defun my-mode-line/padding ()
+  (let ((r-length (length (format-mode-line mode-line-end-spaces))))
+    (propertize " "
+		'display `(space :align-to (- right ,r-length)))))
+
+(setq mode-line-format
+      (list
+       " %+ "
+       (propertize "%b " 'face '(:foreground "yellow"))
+       "- "
+       "%o "
+       "- "
+       "[Mode:%m] - "
+       '(:eval (propertize (format-time-string "%a %D %R") 'face 'bold))
+       '(:eval (my-mode-line/padding))
+       mode-line-end-spaces))
