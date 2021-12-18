@@ -311,9 +311,8 @@
   (interactive)
   (set-face-background #'mode-line-inactive "snow")
   (set-face-foreground #'mode-line-inactive "black")
-  (set-face-background #'mode-line "blue violet")
-  (set-face-foreground #'mode-line "snow")
-  (set-face-foreground #'vertical-border "snow")
+  (set-face-background #'mode-line "gray")
+  (set-face-foreground #'mode-line "black")
   (set-background-color "snow")
   (set-foreground-color "black"))
 
@@ -321,12 +320,11 @@
   "LightSteelBlue4 Background"
   (interactive)
   (set-face-background #'mode-line-inactive "LightSteelBlue4")
-  (set-face-foreground #'mode-line-inactive "snow")
-  (set-face-background #'mode-line "blue violet")
-  (set-face-foreground #'mode-line "snow")
-  (set-face-foreground #'vertical-border "LightSteelBlue4")
+  (set-face-foreground #'mode-line-inactive "gray")
+  (set-face-background #'mode-line "black")
+  (set-face-foreground #'mode-line "gray")
   (set-background-color "LightSteelBlue4")
-  (set-foreground-color "snow"))
+  (set-foreground-color "black"))
 
 (defun black-background ()
   "Black Background"
@@ -334,9 +332,9 @@
   (set-face-background #'mode-line-inactive "black")
   (set-face-foreground #'mode-line-inactive "snow")
   (set-face-background #'mode-line "purple") ;; SlateBlue4
-  (set-face-foreground #'mode-line "snow")
+  (set-face-foreground #'mode-line "black")
   (set-background-color "black")
-  (set-foreground-color "snow"))
+  (set-foreground-color "purple"))
 
 ;; (:background "blue-violet" :foreground "snow" :box "0" :weight "ultra-light" :height "0.9"))
 
@@ -661,6 +659,7 @@ This is like `yank-pop'.  The differences are:
 	      (list
 	       " %+ "
 	       (propertize "%b " 'face 'bold)
+	       "- "
 	       "%o "
 	       "- "
 	       "[Mode:%m] - "
@@ -677,9 +676,9 @@ This is like `yank-pop'.  The differences are:
 ;; 	    '((propertize (concat " " 24-hours ":" minutes " ")
 ;; 			  'face 'egoge-display-time)))
 ;;(display-time-format "%b/%d/%Y %H:%M"))) ;; format-time-string
-;;(face-spec-set 'mode-line-inactive '((t :inherit modeline)))
-;;(face-spec-set 'mode-line-inactive '((t (:box))))
-;;(face-spec-set 'mode-line '((t (:box))))
+;; (face-spec-set 'mode-line-inactive '((t :inherit modeline)))
+;; (face-spec-set 'mode-line-inactive '((t (:box))))
+;; (face-spec-set 'mode-line '((t (:box))))
 ;;end of my mode-line config
 
 
