@@ -91,6 +91,16 @@
   :config
   (setq elpher-gemini-max-fill-width '200))
 
+;;; Server Setup
+(use-package server
+  :ensure nil
+  :defer 1
+  :config
+  (unless (server-running-p)
+    (server-start)))
+
+(setenv "EDITOR" "emacsclient")
+
 ;; (use-package selectrum
 ;;   :ensure t
 ;;   :init)
@@ -119,6 +129,16 @@
 ;;   :init
 ;;   :config
 ;;   (global-emojify-mode))
+
+;; (use-package dired-toggle-sudo
+;;   :ensure t
+;;   ;; :init
+;;   ;; (eval-after-load 'tramp
+;;   ;;   '(progn
+;;   ;;      ;;/sudo:user@host:/usr/
+;;   ;;      (add-to-list 'tramp-default-proxies-alist
+;;   ;; 		    '(".*" "\\`.+\\'" "/ssh:%h:"))))
+;;   :bind (("C-c C-s" . dired-toggle-sudo)))
 
 (use-package ctrlf
   :ensure t
@@ -545,11 +565,11 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (proctrack-cancel-timer))
 
 
-;; (define-minor-mode proctrack-mode "TODO"
-;;   :lighter " ptrk"
-;;   :init-value nil
-;;   (if proctrack-mode (proctrack-enable)
-;;     (proctrack-disable)))
+(define-minor-mode proctrack-mode "TODO"
+  :lighter " ptrk"
+  :init-value nil
+  (if proctrack-mode (proctrack-enable)
+    (proctrack-disable))) 
 ;; 
 ;; End of Pennersr Proctrack-Mode
 
@@ -626,18 +646,29 @@ This is like `yank-pop'.  The differences are:
   "Display CPU/MEM Usage"
   (shell-command-to-string "ps -A -o pcpu | tail -n+2 | paste -sd+ | bc | tr -cd '\40-\176' && echo ' '| tr -cd '\40-\176' && free -t --mega | grep Mem | awk '{print $1,$7}' | tr -cd '\40-\176'"))
 
-  (setq-default mode-line-format
-		(list
-		 " %+ "
-		 "%b "
-		 "=> "
-		 "%f "
-		 "%o "
-		 "- "
-		 "[Mode:%m] "
-		 '(:eval (format-time-string "- %a %D %R - "))
-		 "CPU: "
-		 '(:eval (cpu-memory-usage))))
+(setq mode-line-end-spaces
+      (list
+       (propertize "CPU: " 'face 'bold)
+       (propertize (cpu-memory-usage-3) 'face 'bold)
+       " "))
+
+(defun my-mode-line/padding ()
+  (let ((r-length (length (format-mode-line mode-line-end-spaces))))
+    (propertize " "
+		'display `(space :align-to (- right ,r-length)))))
+
+(setq-default mode-line-format
+	      (list
+	       " %+ "
+	       (propertize "%b " 'face 'bold)
+	       "=> "
+	       "%f "
+	       "%o "
+	       "- "
+	       "[Mode:%m] "
+	       (propertize (format-time-string "- %a %D %R") 'face 'bold)
+	       '(:eval (my-mode-line/padding))
+	       mode-line-end-spaces))
 ;; End of Display CPU/MEM usage in the mode line
 
 ;;(force-mode-line-update 'all)))
@@ -691,9 +722,12 @@ This is like `yank-pop'.  The differences are:
 (define-key 'z-map (kbd "f") 'menu-find-file-existing)
 (define-key 'z-map (kbd "w") 'wdired-change-to-wdired-mode)
 
-;;(global-set-key (kbd "<s-up>") 'windmove-up)
-;;(global-set-key (kbd "<s-down>") 'windmove-down)
-(global-set-key (kbd "C-x b") 'ido-switch-buffer)
+(bind-keys*
+ ("C-z y" . youtube-download-360p))
+
+ ;;(global-set-key (kbd "<s-up>") 'windmove-up)
+ ;;(global-set-key (kbd "<s-down>") 'windmove-down)
+ (global-set-key (kbd "C-x b") 'ido-switch-buffer)
 (global-set-key (kbd "C-x C-c") 'clean-exit)
 ;;(global-set-key (kbd "C-x b") 'helm-buffers-list)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
@@ -986,7 +1020,7 @@ This is like `yank-pop'.  The differences are:
 (defun biotoxz_ ()
   "Biotoxz_ Twitch Stream"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/biotoxz_ 480p --stdout | flatpak run io.mpv.Mpv /dev/stdin" nil 0))
+  (call-process-shell-command "~/.local/bin/./streamlink-3.0.2-1-cp39-cp39-manylinux2014_x86_64.AppImage https://www.twitch.tv/biotoxz_ 360p --stdout | mpv /dev/stdin" nil 0))
 
 (defun xqc ()
   "xQc Twitch Stream"
@@ -1035,7 +1069,7 @@ This is like `yank-pop'.  The differences are:
        (mode . gnus-summary-mode)
        (mode . gnus-article-mode)))))
  '(package-selected-packages
-   '(dired-hide-dotfiles aggressive-indent sudo-edit auto-package-update ctrlf use-package exwm elfeed)))
+   '(xterm-color dired-hide-dotfiles aggressive-indent sudo-edit auto-package-update ctrlf use-package exwm elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
