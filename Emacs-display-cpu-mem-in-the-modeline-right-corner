@@ -4,8 +4,8 @@
 
 (setq mode-line-end-spaces
       (list
-       (propertize "Cpu: " 'face 'bold)
-       (propertize (cpu-memory-usage-3) 'face 'bold)
+       (propertize "CPU: " 'face 'bold)
+       '(:eval (propertize (cpu-memory-usage-3) 'face 'bold))
        " "))
 
 (defun my-mode-line/padding ()
@@ -14,14 +14,14 @@
 		'display `(space :align-to (- right ,r-length)))))
 
 (setq-default mode-line-format
-      (list
-       " %+ "
-       (propertize "%b " 'face 'bold)
-       "=> "
-       "%f "
-       "%o "
-       "- "
-       "[Mode:%m] "
-       (propertize (format-time-string "- %a %D %R") 'face 'bold)
-       '(:eval (my-mode-line/padding))
-       mode-line-end-spaces))
+	      (list
+	       " %+ "
+	       (propertize "%b " 'face 'bold)
+	       "=> "
+	       "%f "
+	       "%o "
+	       "- "
+	       "[Mode:%m] "
+	       '(:eval (propertize (format-time-string "- %a %D %R") 'face 'bold))
+	       '(:eval (my-mode-line/padding))
+	       mode-line-end-spaces))
