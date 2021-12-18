@@ -13,7 +13,7 @@
     (propertize " "
 		'display `(space :align-to (- right ,r-length)))))
 
-(setq mode-line-format
+(setq-default mode-line-format
       (list
        " %+ "
        (propertize "%b " 'face 'bold)
