@@ -679,9 +679,9 @@ This is like `yank-pop'.  The differences are:
 ;; 	    '((propertize (concat " " 24-hours ":" minutes " ")
 ;; 			  'face 'egoge-display-time)))
 ;;(display-time-format "%b/%d/%Y %H:%M"))) ;; format-time-string
-(face-spec-set 'mode-line-inactive '((t :inherit modeline)))
-(face-spec-set 'mode-line-inactive '((t (:box))))
-(face-spec-set 'mode-line '((t (:box))))
+;;(face-spec-set 'mode-line-inactive '((t :inherit modeline)))
+;;(face-spec-set 'mode-line-inactive '((t (:box))))
+;;(face-spec-set 'mode-line '((t (:box))))
 ;;end of my mode-line config
 
 
