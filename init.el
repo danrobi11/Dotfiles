@@ -665,8 +665,8 @@ This is like `yank-pop'.  The differences are:
 	       "%f "
 	       "%o "
 	       "- "
-	       "[Mode:%m] "
-	       '(:eval (propertize (format-time-string "- %a %D %R") 'face 'bold))
+	       "[Mode:%m] - "
+	       '(:eval (propertize (format-time-string "%a %D %R") 'face 'bold))
 	       '(:eval (my-mode-line/padding))
 	       mode-line-end-spaces))
 ;; End of Display CPU/MEM usage in the mode line
