@@ -18,7 +18,6 @@
 	       " %+ "
 	       (propertize "%b " 'face 'bold)
 	       "=> "
-	       "%f "
 	       "%o "
 	       "- "
 	       "[Mode:%m] - "
