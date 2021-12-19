@@ -78,5 +78,6 @@
                           '(reduce-tracking-mode)
                           '(nosound-mode)
          		  '(emacs-mode)
+			  '(auto-mode)
                           '(nowebgl-mode)))))
 
