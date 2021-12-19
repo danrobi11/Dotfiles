@@ -41,6 +41,17 @@
                        :color "white")
               (.selected :background-color "black"
                          :color "white")))))))
+;; (define-configuration browser
+;;   ((theme (make-instance
+;;            'theme
+;;            :dark-p t
+;;            :background-color "black"
+;;            :text-color "white"
+;;            :accent-color "#CD5C5C"
+;;            :primary-color "#556B2F"
+;;            :secondary-color "lightgray"
+;;            :tertiary-color "gray"
+;;            :quaternary-color "dimgray"))))
 
 (define-configuration status-buffer
   ((style (str:concat 
@@ -68,6 +79,9 @@
   ;;you can use %slot-default instead of (make-keymap ...)
   ((override-map (define-key %slot-default%
                    "S-x" 'execute-command
+		   "M-d" 'delete-buffer
+		   "M-v" 'nyxt/visual-mode:visual-mode
+		   "C-s" 'nyxt/web-mode:search-buffer
                    "C-w" 'delete-current-buffer))))
 
 (define-configuration (buffer web-buffer)
@@ -81,4 +95,5 @@
          		  '(emacs-mode)
 			  '(auto-mode)
                           '(nowebgl-mode)))))
+
 
