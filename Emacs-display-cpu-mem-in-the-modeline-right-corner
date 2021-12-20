@@ -23,3 +23,23 @@
 	       '(:eval (propertize (format-time-string "%a %D %R") 'face 'bold))
 	       '(:eval (my-mode-line/padding))
 	       mode-line-end-spaces))
+	       
+;; if the above does not work run it only with:
+
+;; Display CPU/MEM usage in the mode line
+(defun cpu-memory-usage ()
+  "Display CPU/MEM Usage"
+  (shell-command-to-string "ps -A -o pcpu | tail -n+2 | paste -sd+ | bc | tr -cd '\40-\176' && echo ' '| tr -cd '\40-\176' && free -t --mega | grep Mem | awk '{print $1,$7}' | tr -cd '\40-\176'"))
+
+(setq-default mode-line-format
+	      (list
+	       " %+ "
+	       (propertize "%b " 'face 'bold)
+	       "- "
+	       "%o "
+	       "- "
+	       "[Mode:%m] - "
+	       '(:eval (propertize (format-time-string "%a %D %R") 'face 'bold))
+	       " - "
+	       (propertize "Cpu: " 'face 'bold)
+	       '(:eval (propertize (cpu-memory-usage) 'face 'bold))))
