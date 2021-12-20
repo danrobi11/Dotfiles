@@ -24,7 +24,7 @@
 	       '(:eval (my-mode-line/padding))
 	       mode-line-end-spaces))
 	       
-;; if the above does not work run it only with:
+;; if the above does not work run it only with the code below. The CPU/MEM wont be displayed in the right corner :(
 
 ;; Display CPU/MEM usage in the mode line
 (defun cpu-memory-usage ()
