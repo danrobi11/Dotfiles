@@ -63,8 +63,8 @@
   (setq-default elfeed-search-filter "@1-week-ago +unread ")
   (set-face-background 'elfeed-search-title-face "snow")
   (set-face-foreground 'elfeed-search-title-face "black")
-  (set-face-background 'elfeed-search-unread-title-face "black")
-  (set-face-foreground 'elfeed-search-unread-title-face "snow")
+  (set-face-background 'elfeed-search-unread-title-face "snow")
+  (set-face-foreground 'elfeed-search-unread-title-face "black")
   (setq-default elfeed-search-title-max-width '145)
   (defun elfeed-mark-all-as-read ()
     "Mark all unread feeds as read"
@@ -146,15 +146,28 @@
   :config
   (ctrlf-mode))
 
-;; (use-package marginalia ;;  
+(use-package marginalia ;;  
+  :ensure t
+  :init
+  :config
+  (marginalia-mode))
+
+;; (use-package icomplete-vertical
 ;;   :ensure t
-;;   :init
+;;   :demand t
+;;   :custom
+;;   (read-file-name-completion-ignore-case t)
+;;   (read-buffer-completion-ignore-case t)
+;;   (completion-ignore-case t)
 ;;   :config
-;;   (marginalia-mode))
+;;   (fido-mode)
+;;   (icomplete-vertical-mode)
+;; (setq resize-mini-windows 'nil)
+;; (setq icomplete-vertical-prospects-height '1))
+
 
 (use-package auto-package-update
-  :ensure t
-  :init)
+  :ensure t)
 
 (use-package sudo-edit
   :ensure t )
@@ -183,12 +196,12 @@
 ;; query default filenme from teh web server, without confirmation
 ;;  :bind (("C-x y" . ytdl-download))) ;; working**
 
-;; my-dired-mode-hook
-;; Hide the dotfile in dired. Hiden files
 
+;; Hide the dotfile in dired. Hiden files
 (use-package dired-hide-dotfiles
   :ensure t)
 
+;; my-dired-mode-hook
 (defun my-dired-mode-hook ()
   "My `dired' mode hook."
   ;; To hide dot-files by default
@@ -233,6 +246,23 @@
 ;;  :ensure t
 ;;  :init)
 
+(setq message-send-mail-function 'smtpmail-send-it) ; if you use message/Gnus
+;; required for gnus rss feed
+;; (require 'mm-url)
+;; (defadvice mm-url-insert (after DE-convert-atom-to-rss () )
+;;   "Converts atom to RSS by calling xsltproc."
+;;   (when (re-search-forward "xmlns=\"http://www.w3.org/.*/Atom\"" 
+;; 			   nil t)
+;;     (goto-char (point-min))
+;;     (message "Converting Atom to RSS... ")
+;;     (call-process-region (point-min) (point-max) 
+;; 			 "xsltproc" 
+;; 			 t t nil 
+;; 			 (expand-file-name "~/atom2rss.xsl") "-")
+;;     (goto-char (point-min))
+;;     (message "Converting Atom to RSS... done")))
+;;(ad-activate 'mm-url-insert)
+
 ;; Emacs Customization
 ;;(face-spec-set 'vertical-border-face '((t :background black)))
 ;;(setq fringe-styles '("no-fringes" . 0))
@@ -243,10 +273,10 @@
 (winner-mode 1)
 (fringe-mode 0)
 (ido-mode 1)
-(ido-everywhere 1)
+;;(ido-everywhere 1)
 (setq line-move-visual nil) ;; move up/down line with softwrap
 ;;(setq ido-separator "\n") ;; display ido buffer vertically
-(setq icomplete-separator "\t") ;; display icomplete/fido vertically or with https://github.com/oantolin/icomplete-vertical
+;;(setq icomplete-separator "\n") ;; display icomplete/fido vertically or with https://github.com/oantolin/icomplete-vertical
 (global-hl-line-mode 1)
 (global-visual-line-mode 1)
 (global-display-line-numbers-mode 1)
@@ -258,10 +288,17 @@
 (display-time-mode 1)
 (line-number-mode -1)
 (scroll-bar-mode -1)
+(auto-fill-mode 1) ;; automatically breaks the line
+(global-eldoc-mode 1)
+(global-reveal-mode 1)
+(which-function-mode 1)
+(global-highlight-changes-mode 1)
+;; automatically rotate colors when the buffer is saved
+(add-hook 'write-file-functions 'highlight-changes-rotate-faces nil t)
 ;;(helm-adaptive-mode 1)
 (recentf-mode 1) ;; display recently opened file from `find-file` "C-x C-f"
-;;(icomplete-mode 1)
-(fido-mode 1) ;; replacement for icomplete-mode
+(icomplete-mode 0)
+(fido-mode 0) ;; replacement for icomplete-mode
 (menu-bar-mode -1)
 (pixel-scroll-mode -1)
 (global-auto-revert-mode 1)
@@ -270,9 +307,9 @@
 (display-battery-mode 0) ;; display battery charge level
 (setq dired-listing-switches "-alh") ;; dired file size in mb
 ;;(setq display-time-day-and-date 0)
-(setq display-time-default-load-average "\n")
-(setq mode-line-in-non-selected-windows 't)
-(setenv "EDITOR" "emacsclient")
+;; (setq display-time-default-load-average "\t")
+;; (setq mode-line-in-non-selected-windows "\t")
+;;(setenv "EDITOR" "emacsclient")
 (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; mouse scroll one line at a time
 (setq scroll-conservatively '1) ;; keyboard scroll one line at the time
 (setq shr-inhibit-images '0) ;; disable displaying images in eww and elfeed
@@ -346,15 +383,15 @@
 ;;Xah file backup
 (defun xah-make-backup ()
   "Make a backup copy of current file or dired marked files.
-  If in dired, backup current file or marked files.
-  The backup file name is in this format
-  x.html~2018-05-15_133429~
-  The last part is hour, minutes, seconds.
-  in the same dir. If such a file already exist, it's overwritten.
-  If the current buffer is not associated with a file, nothing's done.
-
-  URL `http://ergoemacs.org/emacs/elisp_make-backup.html'
-  Version 2018-05-15"
+   If in dired, backup current file or marked files.
+   The backup file name is in this format
+   x.html~2018-05-15_133429~
+   The last part is hour, minutes, seconds.
+   in the same dir. If such a file already exist, it's overwritten.
+   If the current buffer is not associated with a file, nothing's done.
+ 
+   URL `http://ergoemacs.org/emacs/elisp_make-backup.html'
+   Version 2018-05-15"
   (interactive)
   (let (($fname (buffer-file-name))
 	($date-time-format "%Y-%m-%d_%H%M%S"))
@@ -375,34 +412,34 @@
 
 ;; A variant of this is present in the crux.el package by Bozhidar
 ;; Batsov.
-;;;###autoload
+ ;;;###autoload
 (defun prot-simple-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
-  Do not try to make a new directory or anything fancy."
+   Do not try to make a new directory or anything fancy."
   (interactive
    (list (read-string "Rename current file: " (buffer-file-name))))
   (let ((file (buffer-file-name)))
     (if (vc-registered file)
-        (vc-rename-file file name)
+	(vc-rename-file file name)
       (rename-file file name))
     (set-visited-file-name name t t)))
 
 (defun prot-diff-buffer-dwim (&optional arg)
   "Diff buffer with its file's last saved state, or run `vc-diff'.
-  With optional prefix ARG (\\[universal-argument]) enable
-  highlighting of word-wise changes (local to the current buffer)."
+   With optional prefix ARG (\\[universal-argument]) enable
+   highlighting of word-wise changes (local to the current buffer)."
   (interactive "P")
   (let ((buf))
     (if (buffer-modified-p)
-        (progn
-          (diff-buffer-with-file (current-buffer))
-          (setq buf "*Diff*"))
+	(progn
+	  (diff-buffer-with-file (current-buffer))
+	  (setq buf "*Diff*"))
       (vc-diff)
       (setq buf "*vc-diff*"))
     (when arg
       (with-current-buffer (get-buffer buf)
-        (unless diff-refine
-          (setq-local diff-refine 'font-lock))))))
+	(unless diff-refine
+	  (setq-local diff-refine 'font-lock))))))
 
 ;; required by prot-search-occur-urls
 ;; I copy this from `browse-url-button-regexp' simply because there are
@@ -414,21 +451,21 @@
    "\\(//[-a-z0-9_.]+:[0-9]*\\)?"
    (let ((chars "-a-z0-9_=#$@~%&*+\\/[:word:]")
 	 (punct "!?:;.,"))
-	 (concat
-	  "\\(?:"
-	  ;; Match paired parentheses, e.g. in Wikipedia URLs:
-	  ;; http://thread.gmane.org/47B4E3B2.3050402@gmail.com
-	  "[" chars punct "]+" "(" "[" chars punct "]+" ")"
-	  "\\(?:" "[" chars punct "]+" "[" chars "]" "\\)?"
-	  "\\|"
-	  "[" chars punct "]+" "[" chars "]"
-	  "\\)"))
-  "\\)")
+     (concat
+      "\\(?:"
+      ;; Match paired parentheses, e.g. in Wikipedia URLs:
+      ;; http://thread.gmane.org/47B4E3B2.3050402@gmail.com
+      "[" chars punct "]+" "(" "[" chars punct "]+" ")"
+      "\\(?:" "[" chars punct "]+" "[" chars "]" "\\)?"
+      "\\|"
+      "[" chars punct "]+" "[" chars "]"
+      "\\)"))
+   "\\)")
   "Regular expression that matches URLs.
-Copy of variable `browse-url-button-regexp'.")
+ Copy of variable `browse-url-button-regexp'.")
 
 (autoload 'goto-address-mode "goto-addr")
-;;;###autoload
+ ;;;###autoload
 (defun prot-search-occur-urls ()
   "Produce buttonised list of all URLs in the current buffer."
   (interactive)
@@ -441,18 +478,18 @@ Copy of variable `browse-url-button-regexp'.")
 ;; https://old.reddit.com/r/emacs/comments/p04680/list_unsaved_buffers_before_exiting_emacs/
 (defun clean-exit ()
   "Exit Emacs cleanly.
-If there are unsaved buffer, pop up a list for them to be saved
-before existing. Replaces ‘save-buffers-kill-terminal’."
+ If there are unsaved buffer, pop up a list for them to be saved
+ before existing. Replaces ‘save-buffers-kill-terminal’."
   (interactive)
   (if (frame-parameter nil 'client)
       (server-save-buffers-kill-terminal arg)
     (if-let ((buf-list (seq-filter (lambda (buf)
-                                     (and (buffer-modified-p buf)
-                                          (buffer-file-name buf)))
-                                   (buffer-list))))
-        (progn
-          (pop-to-buffer (list-buffers-noselect t buf-list))
-          (message "s to save, C-k to kill, x to execute"))
+				     (and (buffer-modified-p buf)
+					  (buffer-file-name buf)))
+				   (buffer-list))))
+	(progn
+	  (pop-to-buffer (list-buffers-noselect t buf-list))
+	  (message "s to save, C-k to kill, x to execute"))
       (save-buffers-kill-emacs))))
 
 ;; crux-extensions stuff
@@ -463,11 +500,11 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (let ((filename (buffer-file-name)))
     (when filename
       (if (vc-backend filename)
-          (vc-delete-file filename)
-        (when (y-or-n-p (format "Are you sure you want to delete %s? " filename))
-          (delete-file filename delete-by-moving-to-trash)
-          (message "Deleted file %s" filename)
-          (kill-buffer))))))
+	  (vc-delete-file filename)
+	(when (y-or-n-p (format "Are you sure you want to delete %s? " filename))
+	  (delete-file filename delete-by-moving-to-trash)
+	  (message "Deleted file %s" filename)
+	  (kill-buffer))))))
 
 (defalias 'crux-delete-buffer-and-file #'crux-delete-file-and-buffer)
 
@@ -488,7 +525,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   "Copy lines (as many as prefix argument) in the kill ring"
   (interactive "p")
   (kill-ring-save (line-beginning-position)
-                  (line-beginning-position (+ 1 arg)))
+		  (line-beginning-position (+ 1 arg)))
   (message "%d line%s copied" arg (if (= 1 arg) "" "s")))
 ;; end of copy whole line
 
@@ -499,9 +536,9 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (interactive)
   "Open FILE externally"
   (call-process (pcase system-type
-                  (_ "xdg-open"))
-                nil 0 nil
-                (expand-file-name file)))
+		  (_ "xdg-open"))
+		nil 0 nil
+		(expand-file-name file)))
 
 (defun dired-open-externally (&optional arg)
   "Open marked or current file in operating system's default application."
@@ -521,15 +558,15 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 
 (defun proctrack-child-process (pid)
   (let ((cpids (--filter (eq pid (cdr (assoc 'ppid (process-attributes it))))
-                         (list-system-processes))))
+			 (list-system-processes))))
     (if cpids (car cpids) pid)))
 
 
 (defun proctrack-get-name (buffer)
   (let ((proc (get-buffer-process (buffer-name buffer))))
     (format "*%s*" (if proc (cdr (assoc 'args (process-attributes (proctrack-child-process
-                                                                   (process-id proc)))))
-                     "unknown"))))
+								   (process-id proc)))))
+		     "unknown"))))
 
 (defun proctrack-on-timer (buffer)
   (if (buffer-live-p buffer)
@@ -543,18 +580,18 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
 
 (defun proctrack-enable ()
   (let* (;; Should have just been this:
-         ;;  (setq proctrack-timer  (run-with-idle-timer 1 t 'proctrack-on-timer (current-buffer) ))
-         ;; Due to...
-         ;;     https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51589
-         ;; ... term-mode-hooks get excuted twice, meaning, our `proctrack-enable` gets
-         ;; executed twice and so far I cannot find a proper way to stop the duped timers...
-         (buffer (current-buffer))
-         (fns (make-symbol "local-idle-timer"))
-         (timer (run-with-idle-timer 1 t fns buffer ))
-         (fn `(lambda (buffer)
-                (if (not (buffer-live-p buffer))
-                    (cancel-timer ,timer)
-                  (proctrack-on-timer buffer)))))
+	 ;;  (setq proctrack-timer  (run-with-idle-timer 1 t 'proctrack-on-timer (current-buffer) ))
+	 ;; Due to...
+	 ;;     https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51589
+	 ;; ... term-mode-hooks get excuted twice, meaning, our `proctrack-enable` gets
+	 ;; executed twice and so far I cannot find a proper way to stop the duped timers...
+	 (buffer (current-buffer))
+	 (fns (make-symbol "local-idle-timer"))
+	 (timer (run-with-idle-timer 1 t fns buffer ))
+	 (fn `(lambda (buffer)
+		(if (not (buffer-live-p buffer))
+		    (cancel-timer ,timer)
+		  (proctrack-on-timer buffer)))))
     (fset fns fn))
   (add-hook 'kill-buffer-hook 'proctrack-cancel-timer))
 
@@ -577,7 +614,7 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
   (interactive)
   (let ((dired-buffer (current-buffer)))
     (shell (concat default-directory "-shell"))))
-;; End Of shell-instead-dired
+;; End of shell-instead-dired
 
 (defun crux-create-scratch-buffer ()
   "Create a new scratch buffer."
@@ -586,30 +623,30 @@ before existing. Replaces ‘save-buffers-kill-terminal’."
     (switch-to-buffer buf)
     (funcall initial-major-mode)))
 
-;; my-yank-pop ;; working with ido?
+;; my-yank-pop ;; This works without selectrum and ido
 ;; replace the default yank-pop. It lets you choose in the kill-ring
 ;; https://github.com/raxod502/selectrum/wiki/Useful-Commands#my-yank-pop
 ;; Ref: https://www.gnu.org/software/emacs/manual/html_node/eintr/yank.html
 (defun my-yank-pop (&optional arg)
   "Paste a previously killed string.
-With just \\[universal-argument] as ARG, put point at beginning,
-and mark at end.  Otherwise, put point at the end, and mark at
-the beginning without activating it.
-
-This is like `yank-pop'.  The differences are:
-
-- This let you manually choose a candidate to paste.
-
-- This doesn't delete the text just pasted if the previous
-  command is `yank'."
+ With just \\[universal-argument] as ARG, put point at beginning,
+ and mark at end.  Otherwise, put point at the end, and mark at
+ the beginning without activating it.
+ 
+ This is like `yank-pop'.  The differences are:
+ 
+ - This let you manually choose a candidate to paste.
+ 
+ - This doesn't delete the text just pasted if the previous
+   command is `yank'."
   (interactive "P")
   (let* ((selectrum-should-sort nil)
-         (text nil))
+	 (text nil))
     (setq text
-          (completing-read "Yank: "
-                           (cl-remove-duplicates
-                            kill-ring :test #'equal :from-end t)
-                           nil 'require-match))
+	  (completing-read "Yank: "
+			   (cl-remove-duplicates
+			    kill-ring :test #'equal :from-end t)
+			   nil 'require-match))
     (unless (eq last-command 'yank)
       (push-mark))
     (setq last-command 'yank)
@@ -618,8 +655,8 @@ This is like `yank-pop'.  The differences are:
       (delete-region (region-beginning) (region-end)))
     (insert-for-yank text)
     (if (consp arg)
-        (goto-char (prog1 (mark t)
-                     (set-marker (mark-marker) (point) (current-buffer)))))))
+	(goto-char (prog1 (mark t)
+		     (set-marker (mark-marker) (point) (current-buffer)))))))
 ;; end of my-yank-pop
 
 ;; recentf-open-files+
@@ -637,23 +674,23 @@ This is like `yank-pop'.  The differences are:
     (((type tty))
      (:foreground "blue")))
   "Face used to display the time in the mode line.")
-;; My mode-line config
 
+;; My mode-line config
 ;; Display CPU/MEM usage in the mode line
 (defun cpu-memory-usage ()
   "Display CPU/MEM Usage"
   (shell-command-to-string "ps -A -o pcpu | tail -n+2 | paste -sd+ | bc | tr -cd '\40-\176' && echo ' '| tr -cd '\40-\176' && free -t --mega | grep Mem | awk '{print $1,$7}' | tr -cd '\40-\176'"))
 
-(setq mode-line-end-spaces
-      (list
-       (propertize "Cpu: " 'face 'bold)
-       '(:eval (propertize (cpu-memory-usage-3) 'face 'bold))
-       " "))
+;; (setq mode-line-end-spaces
+;;       (list
+;;        (propertize "Cpu: " 'face 'bold)
+;;        '(:eval (propertize (cpu-memory-usage-3) 'face 'bold))
+;;        " "))
 
-(defun my-mode-line/padding ()
-  (let ((r-length (length (format-mode-line mode-line-end-spaces))))
-    (propertize " "
-		'display `(space :align-to (- right ,r-length)))))
+;; (defun my-mode-line/padding ()
+;;   (let ((r-length (length (format-mode-line mode-line-end-spaces))))
+;;     (propertize " "
+;; 		'display `(space :align-to (- right ,r-length)))))
 
 (setq-default mode-line-format
 	      (list
@@ -663,12 +700,15 @@ This is like `yank-pop'.  The differences are:
 	       "%o "
 	       "- "
 	       "[Mode:%m] - "
-	       '(:eval (propertize (format-time-string "%a %D %R") 'face 'bold))
-	       '(:eval (my-mode-line/padding))
-	       mode-line-end-spaces))
+	       '(:eval (propertize (format-time-string "%a %b/%d/%Y %H:%M") 'face 'bold))
+	       " - "
+	       (propertize "Cpu: " 'face 'bold)
+	       '(:eval (propertize (cpu-memory-usage) 'face 'bold))))
+;; mode-line-end-spaces))
 ;; End of Display CPU/MEM usage in the mode line
 
 ;;(force-mode-line-update 'all)))
+;; %D %R other best
 ;;	       '(:eval (cpu-memory-usage)))))
 ;; %a %b | %Y-%m-%d_%H%M%S | %b/%d/%Y %H:%M
 ;;	       '(:eval (count-lines-page))))
@@ -714,17 +754,17 @@ This is like `yank-pop'.  The differences are:
 (define-key 'z-map (kbd "R") 'replace-regexp)
 ;;(define-key 'z-map (kbd "m") 'memory-usage)
 (define-key 'z-map (kbd "m") 'mpv-youtube-360p)
-(define-key 'z-map (kbd "c") 'cpu-memory-usage)
-(define-key 'z-map (kbd "y") 'youtube-download-360p)
+;;(define-key 'z-map (kbd "c") 'cpu-memory-usage)
+(define-key 'z-map (kbd "Y") 'youtube-download)
 (define-key 'z-map (kbd "f") 'menu-find-file-existing)
 (define-key 'z-map (kbd "w") 'wdired-change-to-wdired-mode)
 
 (bind-keys*
  ("C-z y" . youtube-download-360p))
 
- ;;(global-set-key (kbd "<s-up>") 'windmove-up)
- ;;(global-set-key (kbd "<s-down>") 'windmove-down)
- (global-set-key (kbd "C-x b") 'ido-switch-buffer)
+;;(global-set-key (kbd "<s-up>") 'windmove-up)
+;;(global-set-key (kbd "<s-down>") 'windmove-down)
+;;(global-set-key (kbd "C-x b") 'ido-switch-buffer)
 (global-set-key (kbd "C-x C-c") 'clean-exit)
 ;;(global-set-key (kbd "C-x b") 'helm-buffers-list)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
@@ -738,6 +778,8 @@ This is like `yank-pop'.  The differences are:
 (global-set-key (kbd "C-x C-f") 'find-file)
 (global-set-key (kbd "M-y") 'my-yank-pop)
 ;;(global-set-key (kbd "M-y") 'counsel-yank-pop)
+(global-set-key (kbd "C-x x") 'kill-this-buffer)
+(global-set-key (kbd "C-x b") 'buffer-menu)
 (global-set-key (kbd "C-x t") 'erc-track-switch-buffer) ;; switch to next erc-buffer new message
 (global-set-key (kbd "C-c <left>") 'winner-undo)
 (global-set-key (kbd "C-c <right>") 'winner-redo)
@@ -746,7 +788,7 @@ This is like `yank-pop'.  The differences are:
 (exwm-input-set-key (kbd "<s-up>") 'windmove-up)
 (exwm-input-set-key (kbd "<s-down>") 'windmove-down)
 ;;(exwm-input-set-key (kbd "s-z") 'ido-switch-buffer)
-(exwm-input-set-key (kbd "s-z") 'ido-switch-buffer) ;; ibuffer
+(exwm-input-set-key (kbd "s-z") 'switch-to-buffer) ;; ibuffer, ido-switch-buffer
 ;;(exwm-input-set-key (kbd "s-z") 'helm-buffers-list)
 ;;(global-set-key (kbd "C-x w") 'ace-window)
 (global-set-key (kbd "C-x f") 'exwm-floating-toggle-floating)
@@ -1066,7 +1108,7 @@ This is like `yank-pop'.  The differences are:
        (mode . gnus-summary-mode)
        (mode . gnus-article-mode)))))
  '(package-selected-packages
-   '(xterm-color dired-hide-dotfiles aggressive-indent sudo-edit auto-package-update ctrlf use-package exwm elfeed)))
+   '(marginalia dired-hide-dotfiles aggressive-indent sudo-edit auto-package-update ctrlf use-package exwm elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
