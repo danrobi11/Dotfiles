@@ -742,7 +742,7 @@
 ;; Keybinds
 ;; Personal Prefix-Command (kbd "C-z")
 (define-prefix-command 'z-map)
-(global-set-key (kbd "C-z") 'z-map)
+(exwm-input-set-key (kbd "C-z") 'z-map)
 (define-key 'z-map (kbd "u") 'elfeed-update)
 (define-key 'z-map (kbd "s") 'bookmark-set)
 (define-key 'z-map (kbd "j") 'bookmark-jump)
