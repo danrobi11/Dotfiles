@@ -61,10 +61,6 @@
   :config
   (load (expand-file-name "~/.elfeed/elfeed.el"))
   (setq-default elfeed-search-filter "@1-week-ago +unread ")
-  (set-face-background 'elfeed-search-title-face "snow")
-  (set-face-foreground 'elfeed-search-title-face "black")
-  (set-face-background 'elfeed-search-unread-title-face "snow")
-  (set-face-foreground 'elfeed-search-unread-title-face "black")
   (setq-default elfeed-search-title-max-width '145)
   (defun elfeed-mark-all-as-read ()
     "Mark all unread feeds as read"
@@ -89,7 +85,9 @@
 (use-package elpher
   :ensure t
   :config
+  (setq elpher-use-tls 't)
   (setq elpher-gemini-max-fill-width '200))
+(setq gnutls-verify-error 't)
 
 ;;; Server Setup
 (use-package server
@@ -162,9 +160,7 @@
 ;;   :config
 ;;   (fido-mode)
 ;;   (icomplete-vertical-mode)
-;; (setq resize-mini-windows 'nil)
-;; (setq icomplete-vertical-prospects-height '1))
-
+;; (setq icomplete-vertical-prospects-height '10)
 
 (use-package auto-package-update
   :ensure t)
@@ -246,6 +242,8 @@
 ;;  :ensure t
 ;;  :init)
 
+
+;; gnus stuff
 (setq message-send-mail-function 'smtpmail-send-it) ; if you use message/Gnus
 ;; required for gnus rss feed
 ;; (require 'mm-url)
@@ -267,23 +265,24 @@
 ;;(face-spec-set 'vertical-border-face '((t :background black)))
 ;;(setq fringe-styles '("no-fringes" . 0))
 ;;(setq 'fringe-styles '("no-fringes" . 0))
-(delete-selection-mode)
+(delete-selection-mode 1) ;; typed text replaces the selection if the selection is active.
 ;;(server-start)
 ;;(face-spec-set 'vertical-border '((t :inherit modeline)))
 (winner-mode 1)
 (fringe-mode 0)
 (ido-mode 1)
-;;(ido-everywhere 1)
-(setq line-move-visual nil) ;; move up/down line with softwrap
-;;(setq ido-separator "\n") ;; display ido buffer vertically
-;;(setq icomplete-separator "\n") ;; display icomplete/fido vertically or with https://github.com/oantolin/icomplete-vertical
+(ido-everywhere 1)
+(setq line-move-visual 'nil) ;; move up/down line with softwrap
+(setq ido-separator "\t") ;; display ido buffer vertically
+(setq icomplete-separator "\t") ;; display icomplete/fido vertically or with https://github.com/oantolin/icomplete-vertical
+(setq resize-mini-windows 'nil)
 (global-hl-line-mode 1)
 (global-visual-line-mode 1)
 (global-display-line-numbers-mode 1)
 (blink-cursor-mode -1)
 (save-place-mode 1) ;; save where cursor is in buffers
-(auto-save-mode -1)
-(auto-save-visited-mode -1) ;; autosave new edited buffers
+(auto-save-mode 1)
+(auto-save-visited-mode 0) ;; autosave new edited buffers
 (tool-bar-mode -1)
 (display-time-mode 1)
 (line-number-mode -1)
@@ -298,7 +297,7 @@
 ;;(helm-adaptive-mode 1)
 (recentf-mode 1) ;; display recently opened file from `find-file` "C-x C-f"
 (icomplete-mode 0)
-(fido-mode 0) ;; replacement for icomplete-mode
+(fido-mode 1) ;; replacement for icomplete-mode
 (menu-bar-mode -1)
 (pixel-scroll-mode -1)
 (global-auto-revert-mode 1)
@@ -344,34 +343,52 @@
 
 ;; Backgrounds
 (defun snow-background ()
-  "Snow Background"
+  "Snow Theme"
   (interactive)
   (set-face-background #'mode-line-inactive "snow")
   (set-face-foreground #'mode-line-inactive "black")
   (set-face-background #'mode-line "gray")
   (set-face-foreground #'mode-line "black")
   (set-background-color "snow")
-  (set-foreground-color "black"))
+  (set-foreground-color "black")
+  (set-face-background 'elfeed-search-title-face "snow")
+  (set-face-foreground 'elfeed-search-title-face "red")
+  (set-face-background 'elfeed-search-unread-title-face "snow")
+  (set-face-foreground 'elfeed-search-unread-title-face "purple")
+  (set-face-attribute 'region nil :background "gray"))
 
 (defun lightsteelblue4-background ()
-  "LightSteelBlue4 Background"
+  "LightSteelBlue4 Theme"
   (interactive)
   (set-face-background #'mode-line-inactive "LightSteelBlue4")
   (set-face-foreground #'mode-line-inactive "gray")
   (set-face-background #'mode-line "black")
   (set-face-foreground #'mode-line "gray")
   (set-background-color "LightSteelBlue4")
-  (set-foreground-color "black"))
+  (set-foreground-color "black")
+  (set-face-background 'elfeed-search-title-face "snow")
+  (set-face-foreground 'elfeed-search-title-face "black")
+  (set-face-background 'elfeed-search-unread-title-face "black")
+  (set-face-foreground 'elfeed-search-unread-title-face "purple")
+  (set-face-attribute 'region nil :background "snow"))
 
 (defun black-background ()
-  "Black Background"
+  "Black Theme"
   (interactive)
   (set-face-background #'mode-line-inactive "black")
   (set-face-foreground #'mode-line-inactive "snow")
   (set-face-background #'mode-line "purple") ;; SlateBlue4
   (set-face-foreground #'mode-line "black")
   (set-background-color "black")
-  (set-foreground-color "purple"))
+  (set-foreground-color "purple")
+  (set-face-background 'elfeed-search-title-face "black")
+  (set-face-foreground 'elfeed-search-title-face "red")
+  (set-face-background 'elfeed-search-unread-title-face "black")
+  (set-face-foreground 'elfeed-search-unread-title-face "purple")
+  (set-face-foreground 'elfeed-search-feed-face "#77a")
+  (set-face-background hl-line-face "snow")
+  (set-cursor-color "LightSteelBlue4")
+  (set-face-attribute 'region nil :background "LightSteelBlue4"))
 
 ;; (:background "blue-violet" :foreground "snow" :box "0" :weight "ultra-light" :height "0.9"))
 
@@ -383,15 +400,15 @@
 ;;Xah file backup
 (defun xah-make-backup ()
   "Make a backup copy of current file or dired marked files.
-   If in dired, backup current file or marked files.
-   The backup file name is in this format
-   x.html~2018-05-15_133429~
-   The last part is hour, minutes, seconds.
-   in the same dir. If such a file already exist, it's overwritten.
-   If the current buffer is not associated with a file, nothing's done.
- 
-   URL `http://ergoemacs.org/emacs/elisp_make-backup.html'
-   Version 2018-05-15"
+  If in dired, backup current file or marked files.
+  The backup file name is in this format
+  x.html~2018-05-15_133429~
+  The last part is hour, minutes, seconds.
+  in the same dir. If such a file already exist, it's overwritten.
+  If the current buffer is not associated with a file, nothing's done.
+  
+  URL `http://ergoemacs.org/emacs/elisp_make-backup.html'
+  Version 2018-05-15"
   (interactive)
   (let (($fname (buffer-file-name))
 	($date-time-format "%Y-%m-%d_%H%M%S"))
@@ -415,7 +432,7 @@
  ;;;###autoload
 (defun prot-simple-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
-   Do not try to make a new directory or anything fancy."
+  Do not try to make a new directory or anything fancy."
   (interactive
    (list (read-string "Rename current file: " (buffer-file-name))))
   (let ((file (buffer-file-name)))
@@ -426,8 +443,8 @@
 
 (defun prot-diff-buffer-dwim (&optional arg)
   "Diff buffer with its file's last saved state, or run `vc-diff'.
-   With optional prefix ARG (\\[universal-argument]) enable
-   highlighting of word-wise changes (local to the current buffer)."
+  With optional prefix ARG (\\[universal-argument]) enable
+  highlighting of word-wise changes (local to the current buffer)."
   (interactive "P")
   (let ((buf))
     (if (buffer-modified-p)
@@ -451,16 +468,16 @@
    "\\(//[-a-z0-9_.]+:[0-9]*\\)?"
    (let ((chars "-a-z0-9_=#$@~%&*+\\/[:word:]")
 	 (punct "!?:;.,"))
-     (concat
-      "\\(?:"
-      ;; Match paired parentheses, e.g. in Wikipedia URLs:
-      ;; http://thread.gmane.org/47B4E3B2.3050402@gmail.com
-      "[" chars punct "]+" "(" "[" chars punct "]+" ")"
-      "\\(?:" "[" chars punct "]+" "[" chars "]" "\\)?"
-      "\\|"
-      "[" chars punct "]+" "[" chars "]"
-      "\\)"))
-   "\\)")
+	 (concat
+	  "\\(?:"
+	  ;; Match paired parentheses, e.g. in Wikipedia URLs:
+	  ;; http://thread.gmane.org/47B4E3B2.3050402@gmail.com
+	  "[" chars punct "]+" "(" "[" chars punct "]+" ")"
+	  "\\(?:" "[" chars punct "]+" "[" chars "]" "\\)?"
+	  "\\|"
+	  "[" chars punct "]+" "[" chars "]"
+	  "\\)"))
+  "\\)")
   "Regular expression that matches URLs.
  Copy of variable `browse-url-button-regexp'.")
 
@@ -775,7 +792,7 @@
 (global-set-key (kbd "M-x") 'execute-extended-command)
 ;;(global-set-key (kbd "M-x") 'execute-extended-command)
 ;;(global-set-key (kbd "C-x C-f") 'helm-find-files)
-(global-set-key (kbd "C-x C-f") 'find-file)
+(global-set-key (kbd "C-x C-f") 'ido-find-file)
 (global-set-key (kbd "M-y") 'my-yank-pop)
 ;;(global-set-key (kbd "M-y") 'counsel-yank-pop)
 (global-set-key (kbd "C-x x") 'kill-this-buffer)
@@ -977,7 +994,7 @@
 (defun handbrake ()
   "HandBrake Encoder"
   (interactive)
-  (call-process-shell-command "/usr/bin/handbrake" nil 0))
+  (call-process-shell-command "flatpak run fr.handbrake.ghb" nil 0))
 
 (defun nyxt ()
   "Nyxt Browser"
