@@ -11,4 +11,4 @@ Code [here](https://github.com/danrobi11/Dotfiles/blob/main/nyxt-emacs-theme)
 
 # Emacs and Elfeed Purple Theme
 ![emacs-purple-theme-with-elfeed](https://github.com/danrobi11/Dotfiles/blob/main/screenshots/emacs-purple-theme-with-elfeed.png)
-Code [here]()
+Code [here](https://github.com/danrobi11/Dotfiles/blob/main/emacs-elfeed-purple-theme)
