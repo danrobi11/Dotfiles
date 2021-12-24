@@ -7,4 +7,4 @@ Code [here](https://github.com/danrobi11/Dotfiles/blob/main/Emacs-display-cpu-me
 
 # Emacs theme for Nyxt browser
 ![Nyxt-Emacs-Theme](https://github.com/danrobi11/Dotfiles/blob/main/screenshots/nyxt-emacs-theme-3.png)
-Code [here]()
+Code [here](https://github.com/danrobi11/Dotfiles/blob/main/nyxt-emacs-theme)
