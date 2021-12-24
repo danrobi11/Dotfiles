@@ -1,0 +1,17 @@
+(defun black-background ()
+  "Black Theme"
+  (interactive)
+  (set-face-background #'mode-line-inactive "black")
+  (set-face-foreground #'mode-line-inactive "snow")
+  (set-face-background #'mode-line "purple") ;; SlateBlue4
+  (set-face-foreground #'mode-line "black")
+  (set-background-color "black")
+  (set-foreground-color "purple")
+  (set-face-background 'elfeed-search-title-face "black")
+  (set-face-foreground 'elfeed-search-title-face "red")
+  (set-face-background 'elfeed-search-unread-title-face "black")
+  (set-face-foreground 'elfeed-search-unread-title-face "purple")
+  (set-face-foreground 'elfeed-search-feed-face "#77a")
+  (set-face-background hl-line-face "snow")
+  (set-cursor-color "LightSteelBlue4")
+  (set-face-attribute 'region nil :background "LightSteelBlue4"))
