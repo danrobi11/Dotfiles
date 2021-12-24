@@ -32,7 +32,7 @@
                :background-color "black")
               (".source-content th"
                :border "1px solid purple"
-               :background-color "black")
+               :background-color "white")
               ("#selection"
                :background-color "gray"
                :color "black")
