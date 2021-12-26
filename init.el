@@ -12,10 +12,10 @@
 ;;   (package-install 'use-package))
 
 ;; Set frame transparency
-(set-frame-parameter (selected-frame) 'alpha '(90 . 90))
-(add-to-list 'default-frame-alist '(alpha . (90 . 90)))
-(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+;; (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
+;; (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
+;; (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+;; (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 (defun efs/exwm-update-class ()
   (exwm-workspace-rename-buffer exwm-class-name)) ;; required by exwm add-hook update-class
@@ -25,24 +25,19 @@
   :init
   (setq exwm-init t) ;; start exwm init 
   :config
-  ;;  (exwm-enable)
-  ;;  (require 'exwm)
-  ;;  (require 'exwm-config)
-  ;;  (exwm-config-example)
-  ;;  (setq exwm-floating-border-width '-t)
   (add-hook 'exwm-update-class-hook #'efs/exwm-update-class) ;; auto rename buffer with app name
   (require 'exwm-systemtray)
   (setq exwm-systemtray-height '18)
   (exwm-systemtray-enable))
 
-(require 'exwm-randr)
-(exwm-randr-enable)
-(start-process-shell-command "xrandr" nil "1980x1080")
-(defun efs/set-wallpaper ()
-  (interactive)
-  (start-process-shell-command
-   "feh" nil  "feh --bg-scale /usr/share/backgrounds/desktop-background-girl.darked.png"))
-(efs/set-wallpaper)
+;; (require 'exwm-randr)
+;; (exwm-randr-enable)
+;; (start-process-shell-command "xrandr" nil "1980x1080")
+;; (defun efs/set-wallpaper ()
+;;   (interactive)
+;;   (start-process-shell-command
+;;    "feh" nil  "feh --bg-scale /usr/share/backgrounds/desktop-background-girl.darked.png"))
+;; (efs/set-wallpaper)
 
 ;;(setq exwm-randr-workspace-monitor-plist '(0 "eDP-1"
 ;;                                             1 "DP-1-1"
@@ -138,7 +133,7 @@
 ;;   ;; 		    '(".*" "\\`.+\\'" "/ssh:%h:"))))
 ;;   :bind (("C-c C-s" . dired-toggle-sudo)))
 
-(use-package ctrlf
+(use-package ctrlf ;; https://github.com/raxod502/ctrlf
   :ensure t
   :init
   :config
@@ -165,8 +160,8 @@
 (use-package auto-package-update
   :ensure t)
 
-(use-package sudo-edit
-  :ensure t )
+;; (use-package sudo-edit
+;;   :ensure t )
 
 (use-package aggressive-indent ;; keep your code nicely aligned
   :ensure t
@@ -270,8 +265,10 @@
 ;;(face-spec-set 'vertical-border '((t :inherit modeline)))
 (winner-mode 1)
 (fringe-mode 0)
-(ido-mode 1)
-(ido-everywhere 1)
+;;(setq ido-enable-flex-matching t)
+;;(setq ido-everywhere t)
+(ido-mode 1) ;; https://www.gnu.org/software/emacs/manual/html_mono/ido.html
+;;(ido-everywhere 1) ;; more ido stuff https://masteringemacs.org/article/introduction-to-ido-mode
 (setq line-move-visual 'nil) ;; move up/down line with softwrap
 (setq ido-separator "\t") ;; display ido buffer vertically
 (setq icomplete-separator "\t") ;; display icomplete/fido vertically or with https://github.com/oantolin/icomplete-vertical
@@ -283,7 +280,7 @@
 (save-place-mode 1) ;; save where cursor is in buffers
 (auto-save-mode 1)
 (auto-save-visited-mode 0) ;; autosave new edited buffers
-(tool-bar-mode -1)
+(tool-bar-mode 0)
 (display-time-mode 1)
 (line-number-mode -1)
 (scroll-bar-mode -1)
@@ -296,6 +293,8 @@
 (add-hook 'write-file-functions 'highlight-changes-rotate-faces nil t)
 ;;(helm-adaptive-mode 1)
 (recentf-mode 1) ;; display recently opened file from `find-file` "C-x C-f"
+(setq recentf-auto-cleanup nil)
+(setq recentf-auto-cleanup 'never)
 (icomplete-mode 0)
 (fido-mode 1) ;; replacement for icomplete-mode
 (menu-bar-mode -1)
@@ -333,8 +332,15 @@
 ;;(setq aw-background nil) ;; ace-window overlay on/off
 
 ;; Open url link with eww
-(setq browse-url-browser-function 'eww-browse-url)
-
+;;(setq browse-url-browser-function 'eww-browse-url)
+;; (defun Junction ()
+;;   "Junction Open-With"
+;;   (interactive)
+;;   (call-process-shell-command "flatpak run re.sonny.Junction" nil 0)) ;;
+;; Run this program and use `xdg-open
+;; https://github.com/sonnyp/Junction
+(setq browse-url-browser-function 'browse-url-firefox) ;; #'browse-url-firefox
+(setq browse-url-firefox-program "xdg-open")
 ;; other browser setup
 ;;(setq browse-url-browser-function 'browse-url-firefox) ;; #'browse-url-firefox
 ;;(setq browse-url-firefox-program "netsurf")
@@ -756,6 +762,9 @@
   (start-process-shell-command "yt-dlp" nil "yt-dlp -f18 -P~/Videos-Youtube-Downloads" nil "%s" Y-URL-360))
 ;; End Of Download Youtube Videos
 
+;; Make *shell* buffer open in current buffer
+(add-to-list 'display-buffer-alist '("\\*shell\\*" (display-buffer-same-window)) t)
+
 ;; Keybinds
 ;; Personal Prefix-Command (kbd "C-z")
 (define-prefix-command 'z-map)
@@ -919,7 +928,7 @@
 (defun volumeicon ()
   "volumeicon"
   (interactive)
-  (call-process-shell-command "/usr/bin/./volumeicon" nil 0))
+  (call-process-shell-command "volumeicon" nil 0))
 
 (defun unclutter ()
   "Hide Mouse Cursor"
@@ -934,7 +943,7 @@
 (defun nm-applet ()
   "nm-applet"
   (interactive)
-  (call-process-shell-command "/usr/bin/./nm-applet" nil 0))
+  (call-process-shell-command "nm-applet" nil 0))
 
 (defun twitch ()
   "Twitch AppImage"
@@ -954,7 +963,18 @@
 (defun elza-browser ()
   "Elza Browser"
   (interactive)
-  (call-process-shell-command "~/.local/bin/./ElzaBrowser.Setup.AppImage" nil 0))
+  (call-process-shell-command
+   "~/.local/bin/./ElzaBrowser.Setup.AppImage" nil 0))
+
+(defun muwire ()
+  "MuWire File-Sharing"
+  (interactive)
+  (call-process-shell-command "~/.local/bin/./MuWire-0.8.10.AppImage" nil 0))
+
+(defun flatseal ()
+  "Flatseal Flatpak Manager"
+  (interactive)
+  (call-process-shell-command "flatpak run com.github.tchx84.Flatseal" nil 0))
 
 (defun netsurf ()
   "NetSurf Browser"
@@ -1011,10 +1031,20 @@
   (interactive)
   (call-process-shell-command "~/.local/bin/Xonotic/./xonotic-linux64-glx" nil 0))
 
+(defun startup-emacs ()
+  "Start Emacs With Dunst, Unclutter, Xrandr And Xset"
+  (interactive)
+  (call-process-shell-command "~/.local/bin/./startup-emacs" nil 0)) ;; && xset 'm 0 0' && xset '-dpms' && xrandr '--output HDMI-0 --mode 1920x1080'" nil 0))
+
 (defun app-outlet ()
   "AppImage Store"
   (interactive)
   (call-process-shell-command "~/.local/bin/./App.Outlet-2.0.2.AppImage" nil 0))
+
+(defun supertux ()
+  "SuperTux Game"
+  (interactive)
+  (call-process-shell-command "~/.local/bin/./SuperTux-v0.6.3.glibc2.29-x86_64.AppImage" nil 0))
 
 (defun librewolf ()
   "LibreWolf Browser"
@@ -1125,7 +1155,7 @@
        (mode . gnus-summary-mode)
        (mode . gnus-article-mode)))))
  '(package-selected-packages
-   '(marginalia dired-hide-dotfiles aggressive-indent sudo-edit auto-package-update ctrlf use-package exwm elfeed)))
+   '(marginalia dired-hide-dotfiles aggressive-indent auto-package-update ctrlf use-package exwm elfeed)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
