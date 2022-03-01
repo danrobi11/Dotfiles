@@ -1,5 +1,6 @@
 # Dotfiles
-dotfile
+
+New updated repo [here](https://codeberg.org/danrobi/dotfiles)
 
 # Display Cpu/Mem in the Emacs Modeline right corner
 ![Emacs-display-cpu-mem-in-the-modeline-right-corner](https://github.com/danrobi11/Dotfiles/blob/main/screenshots/emacs-modeline.png)
