@@ -1,0 +1,95 @@
+name: Build ST Portable Binary
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential curl git wget make \
+            libx11-dev libxft-dev libxext-dev pkg-config \
+            patchelf zip
+
+      - name: Download ST source
+        run: |
+          mkdir -p ~/st-build
+          cd ~/st-build
+          wget https://dl.suckless.org/st/st-0.9.tar.gz
+          tar -xzf st-0.9.tar.gz
+
+      - name: Replace config.def.h if provided
+        run: |
+          if [ -f ./config.def.h ]; then
+            echo "Using custom config.def.h"
+            cp ./config.def.h ~/st-build/st-0.9/
+          else
+            echo "No custom config.def.h found. Using default."
+          fi
+
+      - name: Build ST
+        run: |
+          cd ~/st-build/st-0.9
+          make
+
+      - name: Install ST to staging directory
+        run: |
+          mkdir -p ~/st-install/usr/bin
+          cp ~/st-build/st-0.9/st ~/st-install/usr/bin/st-bin
+
+      - name: Bundle all shared library dependencies
+        run: |
+          cd ~/st-install
+          mkdir -p usr/lib
+          chmod +w usr/bin/st-bin
+          ldd usr/bin/st-bin | grep -o '/[^ ]*\.so[^ ]*' | sort -u | while read lib; do
+            cp -v "$lib" usr/lib/ || { echo "Error copying $lib"; exit 1; }
+          done
+          cp -v /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 usr/lib/
+
+      - name: Patch RPATH
+        run: |
+          cd ~/st-install
+          patchelf --force-rpath --set-rpath \$ORIGIN/../lib usr/bin/st-bin
+
+      - name: Create launcher script
+        run: |
+          cd ~/st-install/usr/bin
+          cat > st << 'EOF'
+          #!/bin/bash
+          DIR="$(dirname "$(realpath "$0")")"
+          exec "$DIR/../lib/ld-linux-x86-64.so.2" --library-path "$DIR/../lib" "$DIR/st-bin" "$@"
+          EOF
+          chmod +x st
+          echo "Launcher script created:"
+          cat st
+
+      - name: Create zip archive
+        run: |
+          cd ~/st-install
+          zip -r ~/st-portable.zip .
+
+      - name: Generate SHA256 checksum
+        run: |
+          sha256sum ~/st-portable.zip > ~/st-portable.zip.sha256
+          cat ~/st-portable.zip.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: st-portable
+          path: |
+            ~/st-portable.zip
+            ~/st-portable.zip.sha256
