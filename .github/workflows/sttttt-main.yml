@@ -1,16 +1,17 @@
-name: Build st
+name: Build st portable binary
 
 on:
   push:
-    paths:
-      - '.github/workflows/st.yml'
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install dependencies
@@ -18,9 +19,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             build-essential curl git wget make \
-            libx11-dev libxft-dev libxext-dev pkg-config
+            libx11-dev libxft-dev libxext-dev pkg-config \
+            patchelf zip
 
-      - name: Download and extract st
+      - name: Download and extract st source
         run: |
           mkdir -p ~/st-build
           cd ~/st-build
@@ -49,9 +51,9 @@ jobs:
             [5] = "magenta",
             [6] = "cyan",
             [7] = "white",
-            [256] = "cyan",     // foreground
-            [257] = "black",    // background
-            [258] = "#00ff00"   // cursor color
+            [256] = "cyan",    // foreground
+            [257] = "black",   // background
+            [258] = "#00ff00"  // cursor color
           };
 
           unsigned int defaultfg = 256;
@@ -59,11 +61,11 @@ jobs:
           unsigned int defaultcs = 258;
           unsigned int defaultrcs = 258;
 
-          static unsigned int tabspaces = 8;
+          unsigned int tabspaces = 8;
           wchar_t *worddelimiters = L" ";
           EOF
 
-      - name: Patch x.c cursor color logic
+      - name: Patch x.c to fix cursor drawing
         run: |
           cd ~/st-build/st-0.9
           sed -i '/xdrawcursor/,/^}/s/drawcol = .*/drawcol = dc.col[defaultcs];/' x.c
@@ -73,8 +75,15 @@ jobs:
           cd ~/st-build/st-0.9
           make
 
-      - name: Upload st binary
+      - name: Strip and prepare portable binary
+        run: |
+          cd ~/st-build/st-0.9
+          strip st
+          mkdir -p ~/st-out
+          cp st ~/st-out/
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: st
-          path: ~/st-build/st-0.9/st
+          name: st-portable
+          path: ~/st-out/st
