@@ -15,11 +15,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install musl tools and dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            musl-tools build-essential git curl zip \
+            build-essential git curl zip \
             libgtk2.0-dev libimlib2-dev \
             libjpeg-turbo8-dev libjpeg8-dev libturbojpeg \
             libpng-dev libpng16-16 \
@@ -27,12 +27,12 @@ jobs:
             libfontconfig1-dev libfontconfig1 \
             intltool pkg-config
 
-      - name: Clone and build gpicview with musl
+      - name: Clone and build gpicview statically with glibc
         run: |
           git clone https://github.com/lxde/gpicview.git
           cd gpicview
           ./autogen.sh
-          CC="musl-gcc" CFLAGS="-I/usr/include" LDFLAGS="-L/usr/lib/x86_64-linux-gnu -ljpeg" ./configure --prefix=/usr --enable-static --disable-shared
+          ./configure --prefix=/usr --enable-static --disable-shared
           make LDFLAGS="-static -L/usr/lib/x86_64-linux-gnu -ljpeg" || { echo "Build failed"; exit 1; }
           strip src/gpicview
 
