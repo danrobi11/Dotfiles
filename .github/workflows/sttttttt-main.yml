@@ -3,10 +3,10 @@ name: Build st Portable
 on:
   push:
     branches:
-      - main  # change if your default branch is different
+      - main  # or replace with your default branch
     paths:
-      - '.github/workflows/st.yml'
-      - 'st/**'
+      - ".github/workflows/st.yml"
+      - "st/**"
   workflow_dispatch:
 
 jobs:
@@ -32,116 +32,44 @@ jobs:
           wget https://dl.suckless.org/st/st-0.9.tar.gz
           tar -xzf st-0.9.tar.gz
 
-      - name: Inject complete config.h
+      - name: Inject config.h (clean, compatible version)
         run: |
           cat > ~/st-build/st-0.9/config.h << 'EOF'
+          #include <X11/keysym.h>
+
           static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";
           static int borderpx = 2;
           static char *shell = "/bin/sh";
           static float cwscale = 1.0;
           static float chscale = 1.0;
-          static unsigned int cursorshape = 2; // block
+          static unsigned int cursorshape = 2;
           static int cursorblink = 0;
           static unsigned int cursorthickness = 2;
           static int bellvolume = 0;
-          static unsigned int tabspaces = 8;
-          static unsigned int defaultfg = 256;
-          static unsigned int defaultbg = 257;
-          static unsigned int defaultcs = 258;
-          static unsigned int defaultrcs = 258;
-          static int blinktimeout = 800;
-          static int doubleclicktimeout = 300;
-          static int tripleclicktimeout = 600;
-          static int minlatency = 8;
-          static int maxlatency = 33;
-          static unsigned int cols = 80;
-          static unsigned int rows = 24;
+          static unsigned int defaultfg = 7;
+          static unsigned int defaultbg = 0;
+          static unsigned int defaultcs = 7;
 
-          static unsigned int mouseshape = XC_xterm;
-          static unsigned int mousefg = 7;
-          static unsigned int mousebg = 0;
-          static unsigned int forcemousemod = ShiftMask;
-          static uint ignoremod = Mod2Mask;
-
-          static char *colorname[] = {
-            [0] = "black",
-            [1] = "red",
-            [2] = "green",
-            [3] = "yellow",
-            [4] = "blue",
-            [5] = "magenta",
-            [6] = "cyan",
-            [7] = "white",
-            [256] = "cyan",    // foreground
-            [257] = "black",   // background
-            [258] = "#00ff00"  // cursor
+          static const char *colorname[] = {
+            "black", "red", "green", "yellow",
+            "blue", "magenta", "cyan", "white",
           };
 
-          static char ascii_printable[] =
+          static unsigned int tabspaces = 8;
+
+          static const char ascii_printable[] =
             " !\"#$%&'()*+,-./0123456789:;<=>?"
             "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
             "`abcdefghijklmnopqrstuvwxyz{|}~";
-
-          typedef struct {
-            uint mod;
-            uint button;
-            void (*func)(const Arg *arg);
-            const Arg arg;
-            int release;
-          } MouseShortcut;
-
-          typedef struct {
-            uint b;
-            uint mask;
-            char *s;
-          } MouseKey;
-
-          static MouseShortcut mshortcuts[] = {
-            { ShiftMask, Button4, ttysend, {.i = "\031"} },
-            { ShiftMask, Button5, ttysend, {.i = "\005"} },
-          };
-
-          static uint selmasks[] = {
-            [SEL_RECTANGULAR] = Mod1Mask,
-          };
-
-          typedef struct {
-            uint mod;
-            KeySym keysym;
-            void (*func)(const Arg *);
-            const Arg arg;
-          } Shortcut;
-
-          static Shortcut shortcuts[] = {
-            { XK_NO_MOD, XK_Break, sendbreak, {.i =  0} },
-          };
-
-          typedef struct {
-            uint mod;
-            KeySym k;
-            char *s;
-          } Key;
-
-          static Key key[] = {
-            { XK_NO_MOD, XK_Return, "\r" },
-          };
-
-          static char *mappedkeys[] = {
-            "\033OP", "\033OQ"
-          };
           EOF
-
-      - name: Patch x.c for cursor color
-        run: |
-          cd ~/st-build/st-0.9
-          sed -i '/xdrawcursor/,/^}/s/drawcol = .*/drawcol = dc.col[defaultcs];/' x.c
 
       - name: Build st
         run: |
           cd ~/st-build/st-0.9
+          make clean
           make
 
-      - name: Bundle with patchelf (optional)
+      - name: Bundle binary
         run: |
           cd ~/st-build/st-0.9
           mkdir -p out
