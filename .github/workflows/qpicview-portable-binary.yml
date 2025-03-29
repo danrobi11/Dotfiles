@@ -25,6 +25,7 @@ jobs:
             libturbojpeg libpng-dev libpng16-16 \
             libatspi2.0-dev libatspi2.0-0 \
             libfontconfig1-dev libfontconfig1 \
+            intltool \
             patchelf
 
       - name: Clone and build gpicview
