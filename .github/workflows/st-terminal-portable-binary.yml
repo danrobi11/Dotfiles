@@ -64,6 +64,11 @@ jobs:
           wchar_t *worddelimiters = L" ";
           EOF
 
+      - name: Patch xdrawcursor to force green
+        run: |
+          cd ~/st-build/st-0.9
+          sed -i '/^xdrawcursor.*{$/,/^}/s/drawcol = .*/drawcol = dc.col[defaultcs];/' x.c
+
       - name: Build st
         run: |
           cd ~/st-build/st-0.9
