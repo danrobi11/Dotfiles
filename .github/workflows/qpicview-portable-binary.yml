@@ -1,0 +1,108 @@
+name: Build gpicview Portable Binary
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build tools and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential git curl zip \
+            libgtk2.0-dev libimlib2-dev \
+            libjpeg-turbo8-dev libjpeg-turbo8 \
+            libturbojpeg libpng-dev libpng16-16 \
+            libatspi2.0-dev libatspi2.0-0 \
+            xvfb patchelf gpicview
+
+      - name: Prepare staging directory
+        run: |
+          mkdir -p ~/gpicview-install/usr/bin
+          cp /usr/bin/gpicview ~/gpicview-install/usr/bin/gpicview-bin
+
+      - name: Bundle shared library dependencies
+        run: |
+          cd ~/gpicview-install
+          mkdir -p usr/lib
+          chmod +w usr/bin/gpicview-bin
+          ldd usr/bin/gpicview-bin | grep -o '/[^ ]*\.so[^ ]*' | sort -u | while read lib; do
+            cp -v "$lib" usr/lib/ || { echo "Error: Failed to copy $lib"; exit 1; }
+          done
+          cp -v /usr/lib/x86_64-linux-gnu/libjpeg.so.8 usr/lib/
+          ln -sf libjpeg.so.8 usr/lib/libjpeg.so
+          cp -v /usr/lib/x86_64-linux-gnu/libturbojpeg.so.0 usr/lib/
+          cp -v /usr/lib/x86_64-linux-gnu/libpng16.so.16 usr/lib/
+          cp -v /usr/lib/x86_64-linux-gnu/libimlib2.so.1 usr/lib/
+          cp -v /usr/lib/x86_64-linux-gnu/libatspi.so.0 usr/lib/
+          cp -v /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 usr/lib/
+          ls -l usr/lib/
+          ldd usr/bin/gpicview-bin | grep "not found" || echo "All libraries resolved"
+
+      - name: Ensure RPATH with patchelf
+        run: |
+          cd ~/gpicview-install
+          patchelf --force-rpath --set-rpath '$ORIGIN/../lib' usr/bin/gpicview-bin || { echo "patchelf failed"; exit 1; }
+          patchelf --print-rpath usr/bin/gpicview-bin
+
+      - name: Create launcher script
+        run: |
+          cd ~/gpicview-install/usr/bin
+          cat > gpicview << EOF
+          #!/bin/bash
+          DIR="\$(dirname "\$(realpath "\$0")")"
+          export LD_LIBRARY_PATH="\$DIR/../lib:\$LD_LIBRARY_PATH"
+          "\$DIR/../lib/ld-linux-x86-64.so.2" --library-path "\$DIR/../lib" "\$DIR/gpicview-bin" "\$@"
+          EOF
+          chmod +x gpicview
+          cat gpicview
+
+      - name: Test gpicview with a sample JPEG
+        run: |
+          cd ~/gpicview-install/usr/bin
+          curl -o test.jpg -L --retry 3 --retry-delay 5 --fail \
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Example.jpg/640px-Example.jpg" || { echo "Download failed"; exit 1; }
+          ls -lh test.jpg
+          file test.jpg | grep -q "JPEG image data" || { echo "Not a valid JPEG"; exit 1; }
+          Xvfb :99 -screen 0 1024x768x24 & xvfb_pid=$!
+          sleep 2
+          export DISPLAY=:99
+          ./gpicview test.jpg & gpicview_pid=$!
+          sleep 2
+          if ps -p $gpicview_pid > /dev/null; then
+            kill $gpicview_pid
+            echo "Test image opened successfully"
+          else
+            echo "Failed to start gpicview"
+            ldd ../bin/gpicview-bin
+            exit 1
+          fi
+          kill $xvfb_pid
+
+      - name: Create zip file with binary and libraries
+        run: |
+          cd ~/gpicview-install
+          zip -r ~/gpicview-portable.zip .
+
+      - name: Generate SHA256 checksum
+        run: |
+          sha256sum ~/gpicview-portable.zip > ~/gpicview-portable.zip.sha256
+          cat ~/gpicview-portable.zip.sha256
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpicview-portable
+          path: |
+            ~/gpicview-portable.zip
+            ~/gpicview-portable.zip.sha256
