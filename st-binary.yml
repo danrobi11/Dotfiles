@@ -1,0 +1,60 @@
+name: Build st Portable
+
+on:
+  push:
+    branches:
+      - main  # or replace with your default branch
+    paths:
+      - ".github/workflows/st-main.yml"
+      - "st/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential curl git wget make \
+            libx11-dev libxft-dev libxext-dev pkg-config \
+            patchelf zip
+      - name: Download and extract st
+        run: |
+          mkdir -p ~/st-build
+          cd ~/st-build
+          wget https://dl.suckless.org/st/st-0.9.tar.gz
+          tar -xzf st-0.9.tar.gz
+      - name: Patch config.def.h instead of config.h
+        run: |
+          cd ~/st-build/st-0.9
+          cp config.def.h config.h
+          sed -i 's|^static char \*font = .*|static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";|' config.h
+          sed -i 's|^static int borderpx = .*|static int borderpx = 2;|' config.h
+          sed -i 's|^static char \*shell = .*|static char *shell = "/bin/sh";|' config.h
+          sed -i 's|^static int cursorblink = .*|static int cursorblink = 0;|' config.h
+          sed -i 's|^static unsigned int cursorthickness = .*|static unsigned int cursorthickness = 2;|' config.h
+          sed -i 's|^static int bellvolume = .*|static int bellvolume = 0;|' config.h
+          sed -i 's|^static unsigned int defaultcs = .*|static unsigned int defaultcs = 2;|' config.h
+      - name: Build st
+        run: |
+          cd ~/st-build/st-0.9
+          make clean
+          make
+      - name: Bundle binary
+        run: |
+          cd ~/st-build/st-0.9
+          mkdir -p out
+          cp st out/
+          patchelf --set-rpath '$ORIGIN' out/st || true
+          zip -j st-portable.zip out/st
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: st-portable
+          path: ~/st-build/st-0.9/st-portable.zip
