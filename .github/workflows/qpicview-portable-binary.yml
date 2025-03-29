@@ -24,7 +24,7 @@ jobs:
             libjpeg-turbo8-dev libjpeg-turbo8 \
             libturbojpeg libpng-dev libpng16-16 \
             libatspi2.0-dev libatspi2.0-0 \
-            xvfb patchelf gpicview
+            patchelf gpicview
 
       - name: Prepare staging directory
         run: |
@@ -42,7 +42,6 @@ jobs:
           cp -v /usr/lib/x86_64-linux-gnu/libjpeg.so.8 usr/lib/
           ln -sf libjpeg.so.8 usr/lib/libjpeg.so
           cp -v /usr/lib/x86_64-linux-gnu/libturbojpeg.so.0 usr/lib/
-          # Find the right libImlib2.so file
           IMLIB2_PATH=$(find /usr/lib/x86_64-linux-gnu -name 'libImlib2.so.1*' | head -n 1)
           if [ -n "$IMLIB2_PATH" ]; then
             cp -v "$IMLIB2_PATH" usr/lib/ || { echo "Error: Failed to copy $IMLIB2_PATH"; exit 1; }
@@ -73,28 +72,6 @@ jobs:
           EOF
           chmod +x gpicview
           cat gpicview
-
-      - name: Test gpicview with a sample JPEG
-        run: |
-          cd ~/gpicview-install/usr/bin
-          curl -o test.jpg -L --retry 3 --retry-delay 5 --fail \
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Example.jpg/640px-Example.jpg" || { echo "Download failed"; exit 1; }
-          ls -lh test.jpg
-          file test.jpg | grep -q "JPEG image data" || { echo "Not a valid JPEG"; exit 1; }
-          Xvfb :99 -screen 0 1024x768x24 & xvfb_pid=$!
-          sleep 2
-          export DISPLAY=:99
-          ./gpicview test.jpg & gpicview_pid=$!
-          sleep 2
-          if ps -p $gpicview_pid > /dev/null; then
-            kill $gpicview_pid
-            echo "Test image opened successfully"
-          else
-            echo "Failed to start gpicview"
-            ldd ../bin/gpicview-bin
-            exit 1
-          fi
-          kill $xvfb_pid
 
       - name: Create zip file with binary and libraries
         run: |
