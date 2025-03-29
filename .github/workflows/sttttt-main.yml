@@ -1,9 +1,10 @@
-name: Build st portable binary
+name: Build st Portable
 
 on:
   push:
-    branches:
-      - main
+    paths:
+      - .github/workflows/st.yml
+      - st/**
   workflow_dispatch:
 
 jobs:
@@ -22,25 +23,43 @@ jobs:
             libx11-dev libxft-dev libxext-dev pkg-config \
             patchelf zip
 
-      - name: Download and extract st source
+      - name: Download and extract st
         run: |
           mkdir -p ~/st-build
           cd ~/st-build
           wget https://dl.suckless.org/st/st-0.9.tar.gz
           tar -xzf st-0.9.tar.gz
 
-      - name: Patch config.h
+      - name: Inject complete config.h
         run: |
           cat > ~/st-build/st-0.9/config.h << 'EOF'
           static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";
           static int borderpx = 2;
           static char *shell = "/bin/sh";
-
           static float cwscale = 1.0;
           static float chscale = 1.0;
-
           static unsigned int cursorshape = 2; // block
           static int cursorblink = 0;
+          static unsigned int cursorthickness = 2;
+          static int bellvolume = 0;
+          static unsigned int tabspaces = 8;
+          static unsigned int defaultfg = 256;
+          static unsigned int defaultbg = 257;
+          static unsigned int defaultcs = 258;
+          static unsigned int defaultrcs = 258;
+          static int blinktimeout = 800;
+          static int doubleclicktimeout = 300;
+          static int tripleclicktimeout = 600;
+          static int minlatency = 8;
+          static int maxlatency = 33;
+          static unsigned int cols = 80;
+          static unsigned int rows = 24;
+
+          static unsigned int mouseshape = XC_xterm;
+          static unsigned int mousefg = 7;
+          static unsigned int mousebg = 0;
+          static unsigned int forcemousemod = ShiftMask;
+          static uint ignoremod = Mod2Mask;
 
           static char *colorname[] = {
             [0] = "black",
@@ -53,19 +72,64 @@ jobs:
             [7] = "white",
             [256] = "cyan",    // foreground
             [257] = "black",   // background
-            [258] = "#00ff00"  // cursor color
+            [258] = "#00ff00"  // cursor
           };
 
-          unsigned int defaultfg = 256;
-          unsigned int defaultbg = 257;
-          unsigned int defaultcs = 258;
-          unsigned int defaultrcs = 258;
+          static char ascii_printable[] =
+            " !\"#$%&'()*+,-./0123456789:;<=>?"
+            "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+            "`abcdefghijklmnopqrstuvwxyz{|}~";
 
-          unsigned int tabspaces = 8;
-          wchar_t *worddelimiters = L" ";
+          typedef struct {
+            uint mod;
+            uint button;
+            void (*func)(const Arg *arg);
+            const Arg arg;
+            int release;
+          } MouseShortcut;
+
+          typedef struct {
+            uint b;
+            uint mask;
+            char *s;
+          } MouseKey;
+
+          static MouseShortcut mshortcuts[] = {
+            { ShiftMask, Button4, ttysend, {.i = "\031"} },
+            { ShiftMask, Button5, ttysend, {.i = "\005"} },
+          };
+
+          static uint selmasks[] = {
+            [SEL_RECTANGULAR] = Mod1Mask,
+          };
+
+          typedef struct {
+            uint mod;
+            KeySym keysym;
+            void (*func)(const Arg *);
+            const Arg arg;
+          } Shortcut;
+
+          static Shortcut shortcuts[] = {
+            { XK_NO_MOD, XK_Break, sendbreak, {.i =  0} },
+          };
+
+          typedef struct {
+            uint mod;
+            KeySym k;
+            char *s;
+          } Key;
+
+          static Key key[] = {
+            { XK_NO_MOD, XK_Return, "\r" },
+          };
+
+          static char *mappedkeys[] = {
+            "\033OP", "\033OQ"
+          };
           EOF
 
-      - name: Patch x.c to fix cursor drawing
+      - name: Patch x.c for cursor color
         run: |
           cd ~/st-build/st-0.9
           sed -i '/xdrawcursor/,/^}/s/drawcol = .*/drawcol = dc.col[defaultcs];/' x.c
@@ -75,15 +139,16 @@ jobs:
           cd ~/st-build/st-0.9
           make
 
-      - name: Strip and prepare portable binary
+      - name: Bundle with patchelf (optional)
         run: |
           cd ~/st-build/st-0.9
-          strip st
-          mkdir -p ~/st-out
-          cp st ~/st-out/
+          mkdir -p out
+          cp st out/
+          patchelf --set-rpath '$ORIGIN' out/st || true
+          zip -j st-portable.zip out/st
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: st-portable
-          path: ~/st-out/st
+          path: ~/st-build/st-0.9/st-portable.zip
