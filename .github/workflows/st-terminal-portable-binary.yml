@@ -1,9 +1,6 @@
-name: Build ST Terminal (Static Portable)
+name: Build st (simple terminal)
 
 on:
-  push:
-    paths:
-      - ".github/workflows/st.yml"
   workflow_dispatch:
 
 jobs:
@@ -11,16 +8,13 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Install build dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential curl git wget make \
             libx11-dev libxft-dev libxext-dev pkg-config \
-            libfontconfig-dev libfreetype-dev libpng-dev \
+            libfontconfig-dev libfreetype-dev \
             patchelf zip
 
       - name: Download and extract st
@@ -30,43 +24,49 @@ jobs:
           wget https://dl.suckless.org/st/st-0.9.tar.gz
           tar -xzf st-0.9.tar.gz
 
-      - name: Copy and patch config.h
+      - name: Write config.h with green block cursor and cyan foreground
         run: |
-          cd ~/st-build/st-0.9
-          cp config.def.h config.h
+          cat > ~/st-build/st-0.9/config.h << 'EOF'
+          static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";
+          static int borderpx = 2;
+          static char *shell = "/bin/sh";
 
-          # Customize font, shell, border, etc.
-          sed -i 's|^\(static char \*font = \).*|\1"monospace:pixelsize=14:antialias=true:autohint=true";|' config.h
-          sed -i 's|^\(static int borderpx = \).*|\12;|' config.h
-          sed -i 's|^\(static char \*shell = \).*|\1"/bin/sh";|' config.h
-          sed -i 's|^\(static int cursorblink = \).*|\10;|' config.h
-          sed -i 's|^\(static unsigned int cursorshape = \).*|\12;|' config.h
+          static float cwscale = 1.0;
+          static float chscale = 1.0;
 
-          # Replace full colorname[] block with one that includes cursor color
-          sed -i '/^static char \*colorname\[\] = {/,/^};/c\static char *colorname[] = {\n  "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",\n  [256] = "#cccccc", /* foreground */\n  [257] = "#000000", /* background */\n  [258] = "#00ff00", /* cursor (green) */\n};' config.h
+          static unsigned int cursorshape = 2; // 2 = block
+          static int cursorblink = 0;
 
-          # Set default foreground/background/cursor colors
-          sed -i 's|^\(unsigned int defaultfg = \).*|\1256;|' config.h
-          sed -i 's|^\(unsigned int defaultbg = \).*|\1257;|' config.h
-          sed -i 's|^\(unsigned int defaultcs = \).*|\1258;|' config.h
-          sed -i 's|^\(unsigned int defaultrcs = \).*|\1258;|' config.h
+          static char *colorname[] = {
+            "black",   // 0: black
+            "red",     // 1: red
+            "green",   // 2: green
+            "yellow",  // 3: yellow
+            "blue",    // 4: blue
+            "magenta", // 5: magenta
+            "cyan",    // 6: cyan
+            "white",   // 7: white
+            [256] = "#00ffff", // foreground (cyan)
+            [257] = "#000000", // background (black)
+            [258] = "#00ff00", // cursor (green)
+          };
 
-      - name: Build ST
+          unsigned int defaultfg = 256;
+          unsigned int defaultbg = 257;
+          unsigned int defaultcs = 258;
+          unsigned int defaultrcs = 258;
+
+          unsigned int tabspaces = 8;
+          wchar_t *worddelimiters = L" ";
+          EOF
+
+      - name: Build st
         run: |
           cd ~/st-build/st-0.9
           make
 
-      - name: Make portable binary directory
-        run: |
-          mkdir -p ~/st-build/out/usr/bin
-          cp ~/st-build/st-0.9/st ~/st-build/out/usr/bin/
-
-      - name: Patch binary with patchelf
-        run: |
-          patchelf --set-rpath '$ORIGIN/../lib' ~/st-build/out/usr/bin/st || true
-
-      - name: Upload artifact
+      - name: Upload built st
         uses: actions/upload-artifact@v4
         with:
-          name: st-portable
-          path: ~/st-build/out
+          name: st-binary
+          path: ~/st-build/st-0.9/st
