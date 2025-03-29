@@ -1,12 +1,13 @@
-name: Build ST Terminal (portable)
+name: Build ST Terminal (Static Portable)
 
 on:
   push:
+    paths:
+      - ".github/workflows/st.yml"
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build Portable ST Binary
     runs-on: ubuntu-24.04
 
     steps:
@@ -17,12 +18,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential wget curl git make \
+            build-essential curl git wget make \
             libx11-dev libxft-dev libxext-dev pkg-config \
-            libfontconfig-dev libfreetype-dev \
+            libfontconfig-dev libfreetype-dev libpng-dev \
             patchelf zip
 
-      - name: Download st source
+      - name: Download and extract st
         run: |
           mkdir -p ~/st-build
           cd ~/st-build
@@ -34,20 +35,38 @@ jobs:
           cd ~/st-build/st-0.9
           cp config.def.h config.h
 
-          # Apply your customizations
+          # Customize font, shell, border, etc.
           sed -i 's|^\(static char \*font = \).*|\1"monospace:pixelsize=14:antialias=true:autohint=true";|' config.h
           sed -i 's|^\(static int borderpx = \).*|\12;|' config.h
           sed -i 's|^\(static char \*shell = \).*|\1"/bin/sh";|' config.h
           sed -i 's|^\(static int cursorblink = \).*|\10;|' config.h
           sed -i 's|^\(static unsigned int cursorshape = \).*|\12;|' config.h
 
-      - name: Build st
+          # Replace full colorname[] block with one that includes cursor color
+          sed -i '/^static char \*colorname\[\] = {/,/^};/c\static char *colorname[] = {\n  "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",\n  [256] = "#cccccc", /* foreground */\n  [257] = "#000000", /* background */\n  [258] = "#00ff00", /* cursor (green) */\n};' config.h
+
+          # Set default foreground/background/cursor colors
+          sed -i 's|^\(unsigned int defaultfg = \).*|\1256;|' config.h
+          sed -i 's|^\(unsigned int defaultbg = \).*|\1257;|' config.h
+          sed -i 's|^\(unsigned int defaultcs = \).*|\1258;|' config.h
+          sed -i 's|^\(unsigned int defaultrcs = \).*|\1258;|' config.h
+
+      - name: Build ST
         run: |
           cd ~/st-build/st-0.9
           make
 
-      - name: Upload binary
+      - name: Make portable binary directory
+        run: |
+          mkdir -p ~/st-build/out/usr/bin
+          cp ~/st-build/st-0.9/st ~/st-build/out/usr/bin/
+
+      - name: Patch binary with patchelf
+        run: |
+          patchelf --set-rpath '$ORIGIN/../lib' ~/st-build/out/usr/bin/st || true
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: st-x86_64
-          path: ~/st-build/st-0.9/st
+          name: st-portable
+          path: ~/st-build/out
