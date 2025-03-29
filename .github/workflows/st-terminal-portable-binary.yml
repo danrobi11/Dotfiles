@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - '.github/workflows/st.yml'
-      - '**/st/**'
 
 jobs:
   build:
@@ -28,7 +27,7 @@ jobs:
           wget https://dl.suckless.org/st/st-0.9.tar.gz
           tar -xzf st-0.9.tar.gz
 
-      - name: Write config.h
+      - name: Patch config.h
         run: |
           cat > ~/st-build/st-0.9/config.h << 'EOF'
           static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";
@@ -42,7 +41,7 @@ jobs:
           static int cursorblink = 0;
 
           static char *colorname[] = {
-            [0] = "black",   // black
+            [0] = "black",
             [1] = "red",
             [2] = "green",
             [3] = "yellow",
@@ -50,10 +49,10 @@ jobs:
             [5] = "magenta",
             [6] = "cyan",
             [7] = "white",
-            [8] = "#00ff00",  // bright black (used for cursor)
-            [256] = "cyan",   // foreground
-            [257] = "black",  // background
-            [258] = "#00ff00" // cursor color
+            [8] = "#00ff00",
+            [256] = "cyan",
+            [257] = "black",
+            [258] = "#00ff00"
           };
 
           unsigned int defaultfg = 256;
@@ -70,7 +69,7 @@ jobs:
           cd ~/st-build/st-0.9
           make
 
-      - name: Upload built binary
+      - name: Upload st binary
         uses: actions/upload-artifact@v4
         with:
           name: st
