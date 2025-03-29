@@ -1,122 +1,53 @@
-name: Build ST Portable Binary
+name: Build ST Terminal (portable)
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Build Portable ST Binary
+    runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential curl git wget make \
+            build-essential wget curl git make \
             libx11-dev libxft-dev libxext-dev pkg-config \
+            libfontconfig-dev libfreetype-dev \
             patchelf zip
 
-      - name: Download ST source
+      - name: Download st source
         run: |
           mkdir -p ~/st-build
           cd ~/st-build
           wget https://dl.suckless.org/st/st-0.9.tar.gz
           tar -xzf st-0.9.tar.gz
 
-      - name: Inject config.h with green block cursor
+      - name: Copy and patch config.h
         run: |
-          cat > ~/st-build/st-0.9/config.h << 'EOF'
-          static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";
-          static int borderpx = 2;
-          static char *shell = "/bin/sh";
+          cd ~/st-build/st-0.9
+          cp config.def.h config.h
 
-          static float cwscale = 1.0;
-          static float chscale = 1.0;
+          # Apply your customizations
+          sed -i 's|^\(static char \*font = \).*|\1"monospace:pixelsize=14:antialias=true:autohint=true";|' config.h
+          sed -i 's|^\(static int borderpx = \).*|\12;|' config.h
+          sed -i 's|^\(static char \*shell = \).*|\1"/bin/sh";|' config.h
+          sed -i 's|^\(static int cursorblink = \).*|\10;|' config.h
+          sed -i 's|^\(static unsigned int cursorshape = \).*|\12;|' config.h
 
-          static unsigned int cursorshape = 2; /* 2: block */
-          static int cursorblink = 0;          /* 0: no blink */
-
-          static char *colorname[] = {
-            "black",   /* 0: black */
-            "red",     /* 1: red */
-            "green",   /* 2: green */
-            "yellow",  /* 3: yellow */
-            "blue",    /* 4: blue */
-            "magenta", /* 5: magenta */
-            "cyan",    /* 6: cyan */
-            "white",   /* 7: white */
-            [256] = "#cccccc", /* foreground */
-            [257] = "#000000", /* background */
-            [258] = "#00ff00", /* cursor: green */
-          };
-
-          unsigned int defaultfg = 256;
-          unsigned int defaultbg = 257;
-          unsigned int defaultcs = 258;
-          unsigned int defaultrcs = 258;
-
-          unsigned int tabspaces = 8;
-          wchar_t *worddelimiters = L" ";
-          EOF
-
-      - name: Build ST
+      - name: Build st
         run: |
           cd ~/st-build/st-0.9
           make
 
-      - name: Install ST to staging directory
-        run: |
-          mkdir -p ~/st-install/usr/bin
-          cp ~/st-build/st-0.9/st ~/st-install/usr/bin/st-bin
-
-      - name: Bundle all shared library dependencies
-        run: |
-          cd ~/st-install
-          mkdir -p usr/lib
-          chmod +w usr/bin/st-bin
-          ldd usr/bin/st-bin | grep -o '/[^ ]*\.so[^ ]*' | sort -u | while read lib; do
-            cp -v "$lib" usr/lib/ || { echo "Error copying $lib"; exit 1; }
-          done
-          cp -v /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 usr/lib/
-
-      - name: Patch RPATH
-        run: |
-          cd ~/st-install
-          patchelf --force-rpath --set-rpath \$ORIGIN/../lib usr/bin/st-bin
-
-      - name: Create launcher script
-        run: |
-          cd ~/st-install/usr/bin
-          cat > st << 'EOF'
-          #!/bin/bash
-          DIR="$(dirname "$(realpath "$0")")"
-          exec "$DIR/../lib/ld-linux-x86-64.so.2" --library-path "$DIR/../lib" "$DIR/st-bin" "$@"
-          EOF
-          chmod +x st
-          echo "Launcher script created:"
-          cat st
-
-      - name: Create zip archive
-        run: |
-          cd ~/st-install
-          zip -r ~/st-portable.zip .
-
-      - name: Generate SHA256 checksum
-        run: |
-          sha256sum ~/st-portable.zip > ~/st-portable.zip.sha256
-          cat ~/st-portable.zip.sha256
-
-      - name: Upload artifact
+      - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: st-portable
-          path: |
-            ~/st-portable.zip
-            ~/st-portable.zip.sha256
+          name: st-x86_64
+          path: ~/st-build/st-0.9/st
