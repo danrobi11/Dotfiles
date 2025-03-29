@@ -42,6 +42,7 @@ jobs:
           sed -i 's|^static int cursorblink = .*|static int cursorblink = 0;|' config.h
           sed -i 's|^static unsigned int cursorthickness = .*|static unsigned int cursorthickness = 2;|' config.h
           sed -i 's|^static int bellvolume = .*|static int bellvolume = 0;|' config.h
+          sed -i 's|^static unsigned int defaultcs = .*|static unsigned int defaultcs = 2;|' config.h
 
       - name: Build st
         run: |
