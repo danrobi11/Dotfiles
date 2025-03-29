@@ -1,6 +1,9 @@
-name: Build st (simple terminal)
+name: Build ST Terminal
 
 on:
+  push:
+    paths:
+      - 'st/**'
   workflow_dispatch:
 
 jobs:
@@ -8,65 +11,72 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential curl git wget make \
-            libx11-dev libxft-dev libxext-dev pkg-config \
-            libfontconfig-dev libfreetype-dev \
-            patchelf zip
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Download and extract st
-        run: |
-          mkdir -p ~/st-build
-          cd ~/st-build
-          wget https://dl.suckless.org/st/st-0.9.tar.gz
-          tar -xzf st-0.9.tar.gz
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential curl git wget make \
+          libx11-dev libxft-dev libxext-dev pkg-config \
+          patchelf zip
 
-      - name: Write config.h with green block cursor and cyan foreground
-        run: |
-          cat > ~/st-build/st-0.9/config.h << 'EOF'
-          static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";
-          static int borderpx = 2;
-          static char *shell = "/bin/sh";
+    - name: Download and extract ST source
+      run: |
+        mkdir -p ~/st-build
+        cd ~/st-build
+        wget https://dl.suckless.org/st/st-0.9.tar.gz
+        tar -xzf st-0.9.tar.gz
 
-          static float cwscale = 1.0;
-          static float chscale = 1.0;
+    - name: Write custom config.h
+      run: |
+        cat > ~/st-build/st-0.9/config.h << 'EOF'
+        static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";
+        static int borderpx = 2;
+        static char *shell = "/bin/sh";
 
-          static unsigned int cursorshape = 2; // 2 = block
-          static int cursorblink = 0;
+        static float cwscale = 1.0;
+        static float chscale = 1.0;
 
-          static char *colorname[] = {
-            "black",   // 0: black
-            "red",     // 1: red
-            "green",   // 2: green
-            "yellow",  // 3: yellow
-            "blue",    // 4: blue
-            "magenta", // 5: magenta
-            "cyan",    // 6: cyan
-            "white",   // 7: white
-            [256] = "#00ffff", // foreground (cyan)
-            [257] = "#000000", // background (black)
-            [258] = "#00ff00", // cursor (green)
-          };
+        static unsigned int cursorshape = 2; // block
+        static int cursorblink = 0;
 
-          unsigned int defaultfg = 256;
-          unsigned int defaultbg = 257;
-          unsigned int defaultcs = 258;
-          unsigned int defaultrcs = 258;
+        static char *colorname[] = {
+          "black",   // 0
+          "red",     // 1
+          "green",   // 2
+          "yellow",  // 3
+          "blue",    // 4
+          "magenta", // 5
+          "cyan",    // 6
+          "white",   // 7
+          [256] = "#00ffff", // foreground (cyan)
+          [257] = "#000000", // background (black)
+          [258] = "#00ff00", // cursor (green)
+        };
 
-          unsigned int tabspaces = 8;
-          wchar_t *worddelimiters = L" ";
-          EOF
+        unsigned int defaultfg = 256;
+        unsigned int defaultbg = 257;
+        unsigned int defaultcs = 258;
+        unsigned int defaultrcs = 258;
 
-      - name: Build st
-        run: |
-          cd ~/st-build/st-0.9
-          make
+        unsigned int tabspaces = 8;
+        wchar_t *worddelimiters = L" ";
+        EOF
 
-      - name: Upload built st
-        uses: actions/upload-artifact@v4
-        with:
-          name: st-binary
-          path: ~/st-build/st-0.9/st
+    - name: Patch x.c to force green cursor
+      run: |
+        sed -i '/^.*if *(selected(x, y)) *{/,/^.*} *else *{/c\
+        \tg.bg = defaultbg;\n\tg.fg = defaultcs;' ~/st-build/st-0.9/x.c
+
+    - name: Build ST
+      run: |
+        cd ~/st-build/st-0.9
+        make
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: st-binary
+        path: ~/st-build/st-0.9/st
