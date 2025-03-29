@@ -25,16 +25,16 @@ jobs:
             libturbojpeg libpng-dev libpng16-16 \
             libatspi2.0-dev libatspi2.0-0 \
             libfontconfig1-dev libfontconfig1 \
-            intltool \
+            intltool pkg-config \
             patchelf
 
-      - name: Clone and build gpicview
+      - name: Clone and build gpicview statically
         run: |
           git clone https://github.com/lxde/gpicview.git
           cd gpicview
           ./autogen.sh
-          ./configure --prefix=/usr
-          make || { echo "Build failed"; exit 1; }
+          ./configure --prefix=/usr --enable-static
+          make LDFLAGS="-static" || { echo "Build failed"; exit 1; }
           strip src/gpicview
 
       - name: Prepare staging directory
@@ -44,7 +44,7 @@ jobs:
           cp gpicview/src/gpicview ~/gpicview-install/usr/bin/gpicview-bin
           cp -r /etc/fonts/fonts.conf ~/gpicview-install/etc/fonts/
 
-      - name: Bundle shared library dependencies
+      - name: Bundle minimal dependencies
         run: |
           cd ~/gpicview-install
           mkdir -p usr/lib
@@ -52,20 +52,6 @@ jobs:
           ldd usr/bin/gpicview-bin | grep -o '/[^ ]*\.so[^ ]*' | sort -u | while read lib; do
             cp -v "$lib" usr/lib/ || { echo "Error: Failed to copy $lib"; exit 1; }
           done
-          cp -v /usr/lib/x86_64-linux-gnu/libjpeg.so.8 usr/lib/
-          ln -sf libjpeg.so.8 usr/lib/libjpeg.so
-          cp -v /usr/lib/x86_64-linux-gnu/libturbojpeg.so.0 usr/lib/
-          IMLIB2_PATH=$(find /usr/lib/x86_64-linux-gnu -name 'libImlib2.so.1*' | head -n 1)
-          if [ -n "$IMLIB2_PATH" ]; then
-            cp -v "$IMLIB2_PATH" usr/lib/ || { echo "Error: Failed to copy $IMLIB2_PATH"; exit 1; }
-          else
-            echo "Error: libImlib2.so.1 not found"
-            exit 1
-          fi
-          cp -v /usr/lib/x86_64-linux-gnu/libpng16.so.16 usr/lib/
-          cp -v /usr/lib/x86_64-linux-gnu/libatspi.so.0 usr/lib/
-          cp -v /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 usr/lib/
-          cp -v /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 usr/lib/
           ls -l usr/lib/
           ldd usr/bin/gpicview-bin | grep "not found" || echo "All libraries resolved"
 
@@ -83,7 +69,7 @@ jobs:
           DIR="\$(dirname "\$(realpath "\$0")")"
           export LD_LIBRARY_PATH="\$DIR/../lib:\$LD_LIBRARY_PATH"
           export FONTCONFIG_PATH="\$DIR/../etc/fonts"
-          "\$DIR/../lib/ld-linux-x86-64.so.2" --library-path "\$DIR/../lib" "\$DIR/gpicview-bin" "\$@"
+          "\$DIR/gpicview-bin" "\$@"
           EOF
           chmod +x gpicview
           cat gpicview
