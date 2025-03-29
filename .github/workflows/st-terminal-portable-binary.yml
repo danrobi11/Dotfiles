@@ -30,14 +30,55 @@ jobs:
           wget https://dl.suckless.org/st/st-0.9.tar.gz
           tar -xzf st-0.9.tar.gz
 
-      - name: Replace config.def.h if provided
+      - name: Inject custom config.h with green block cursor
         run: |
-          if [ -f ./config.def.h ]; then
-            echo "Using custom config.def.h"
-            cp ./config.def.h ~/st-build/st-0.9/
-          else
-            echo "No custom config.def.h found. Using default."
-          fi
+          cat > ~/st-build/st-0.9/config.h << 'EOF'
+          /* Default settings */
+          static char *font = "monospace:pixelsize=14:antialias=true:autohint=true";
+          static int borderpx = 2;
+          static char *shell = "/bin/sh";
+
+          /* Cursor customization */
+          static unsigned int cursorshape = 2; /* 2: block */
+          static int cursorblink = 0;          /* 0: no blink */
+          static char *colorname[] = {
+            "black",   /* 0: black */
+            "red",     /* 1: red */
+            "green",   /* 2: green */
+            "yellow",  /* 3: yellow */
+            "blue",    /* 4: blue */
+            "magenta", /* 5: magenta */
+            "cyan",    /* 6: cyan */
+            "white",   /* 7: white */
+            [256] = "#cccccc", /* foreground */
+            [257] = "#000000", /* background */
+            [258] = "#00ff00", /* cursor: green */
+          };
+          static unsigned int defaultfg = 256;
+          static unsigned int defaultbg = 257;
+          static unsigned int defaultcs = 258; /* Use green cursor */
+          static unsigned int defaultrcs = 258;
+
+          /* Rest of default config */
+          static float cwscale = 1.0;
+          static float chscale = 1.0;
+
+          static unsigned int doubleclicktimeout = 300;
+          static unsigned int tripleclicktimeout = 600;
+
+          static unsigned int blinktimeout = 800;
+
+          static unsigned int tabspaces = 8;
+
+          static const char worddelimiters[] = " ";
+
+          static unsigned int defaultattr = 0;
+
+          static MouseShortcut mshortcuts[] = {
+              { Button4, XK_ANY_MOD, kscrollup, {.i = 1} },
+              { Button5, XK_ANY_MOD, kscrolldown, {.i = 1} },
+          };
+          EOF
 
       - name: Build ST
         run: |
