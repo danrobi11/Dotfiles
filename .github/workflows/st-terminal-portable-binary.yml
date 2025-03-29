@@ -37,7 +37,7 @@ jobs:
           static float cwscale = 1.0;
           static float chscale = 1.0;
 
-          static unsigned int cursorshape = 2; // 2 = block
+          static unsigned int cursorshape = 2; // block
           static int cursorblink = 0;
 
           static char *colorname[] = {
@@ -49,10 +49,9 @@ jobs:
             [5] = "magenta",
             [6] = "cyan",
             [7] = "white",
-            [8] = "#00ff00",
-            [256] = "cyan",
-            [257] = "black",
-            [258] = "#00ff00"
+            [256] = "cyan",     // foreground
+            [257] = "black",    // background
+            [258] = "#00ff00"   // cursor color
           };
 
           unsigned int defaultfg = 256;
@@ -64,10 +63,10 @@ jobs:
           wchar_t *worddelimiters = L" ";
           EOF
 
-      - name: Patch xdrawcursor to force green
+      - name: Patch x.c cursor color logic
         run: |
           cd ~/st-build/st-0.9
-          sed -i '/^xdrawcursor.*{$/,/^}/s/drawcol = .*/drawcol = dc.col[defaultcs];/' x.c
+          sed -i '/xdrawcursor/,/^}/s/drawcol = .*/drawcol = dc.col[defaultcs];/' x.c
 
       - name: Build st
         run: |
