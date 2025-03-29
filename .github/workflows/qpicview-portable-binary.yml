@@ -15,25 +15,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install build tools and dependencies
+      - name: Install musl tools and dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential git curl zip \
+            musl-tools build-essential git curl zip \
             libgtk2.0-dev libimlib2-dev \
             libjpeg-turbo8-dev libjpeg-turbo8 \
             libturbojpeg libpng-dev libpng16-16 \
             libatspi2.0-dev libatspi2.0-0 \
             libfontconfig1-dev libfontconfig1 \
-            intltool pkg-config \
-            patchelf
+            intltool pkg-config
 
-      - name: Clone and build gpicview statically
+      - name: Clone and build gpicview with musl
         run: |
           git clone https://github.com/lxde/gpicview.git
           cd gpicview
           ./autogen.sh
-          ./configure --prefix=/usr --enable-static
+          CC="musl-gcc" ./configure --prefix=/usr --enable-static --disable-shared
           make LDFLAGS="-static" || { echo "Build failed"; exit 1; }
           strip src/gpicview
 
@@ -44,37 +43,19 @@ jobs:
           cp gpicview/src/gpicview ~/gpicview-install/usr/bin/gpicview-bin
           cp -r /etc/fonts/fonts.conf ~/gpicview-install/etc/fonts/
 
-      - name: Bundle minimal dependencies
-        run: |
-          cd ~/gpicview-install
-          mkdir -p usr/lib
-          chmod +w usr/bin/gpicview-bin
-          ldd usr/bin/gpicview-bin | grep -o '/[^ ]*\.so[^ ]*' | sort -u | while read lib; do
-            cp -v "$lib" usr/lib/ || { echo "Error: Failed to copy $lib"; exit 1; }
-          done
-          ls -l usr/lib/
-          ldd usr/bin/gpicview-bin | grep "not found" || echo "All libraries resolved"
-
-      - name: Ensure RPATH with patchelf
-        run: |
-          cd ~/gpicview-install
-          patchelf --force-rpath --set-rpath '$ORIGIN/../lib' usr/bin/gpicview-bin || { echo "patchelf failed"; exit 1; }
-          patchelf --print-rpath usr/bin/gpicview-bin
-
       - name: Create launcher script
         run: |
           cd ~/gpicview-install/usr/bin
           cat > gpicview << EOF
           #!/bin/bash
           DIR="\$(dirname "\$(realpath "\$0")")"
-          export LD_LIBRARY_PATH="\$DIR/../lib:\$LD_LIBRARY_PATH"
           export FONTCONFIG_PATH="\$DIR/../etc/fonts"
           "\$DIR/gpicview-bin" "\$@"
           EOF
           chmod +x gpicview
           cat gpicview
 
-      - name: Create zip file with binary and libraries
+      - name: Create zip file
         run: |
           cd ~/gpicview-install
           zip -r ~/gpicview-portable.zip .
