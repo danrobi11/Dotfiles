@@ -42,8 +42,15 @@ jobs:
           cp -v /usr/lib/x86_64-linux-gnu/libjpeg.so.8 usr/lib/
           ln -sf libjpeg.so.8 usr/lib/libjpeg.so
           cp -v /usr/lib/x86_64-linux-gnu/libturbojpeg.so.0 usr/lib/
+          # Find the right libImlib2.so file
+          IMLIB2_PATH=$(find /usr/lib/x86_64-linux-gnu -name 'libImlib2.so.1*' | head -n 1)
+          if [ -n "$IMLIB2_PATH" ]; then
+            cp -v "$IMLIB2_PATH" usr/lib/ || { echo "Error: Failed to copy $IMLIB2_PATH"; exit 1; }
+          else
+            echo "Error: libImlib2.so.1 not found"
+            exit 1
+          fi
           cp -v /usr/lib/x86_64-linux-gnu/libpng16.so.16 usr/lib/
-          cp -v /usr/lib/x86_64-linux-gnu/libimlib2.so.1 usr/lib/
           cp -v /usr/lib/x86_64-linux-gnu/libatspi.so.0 usr/lib/
           cp -v /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 usr/lib/
           ls -l usr/lib/
