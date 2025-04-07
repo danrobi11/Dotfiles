@@ -1,0 +1,103 @@
+name: Build Quickgui AppImage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the Quickgui repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'  # Use a stable version compatible with Quickgui
+          channel: 'stable'
+      - run: flutter --version
+      - run: flutter config --enable-linux-desktop
+      - run: flutter pub get
+
+      # Install dependencies for building and AppImage creation
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            file \
+            libgtk-3-dev \
+            libfuse2 \
+            wget
+
+      # Build Quickgui
+      - name: Build Quickgui
+        run: flutter build linux --release
+
+      # Create AppDir structure
+      - name: Set up AppDir
+        run: |
+          mkdir -p Quickgui.AppDir/usr/bin
+          mkdir -p Quickgui.AppDir/usr/lib
+          mkdir -p Quickgui.AppDir/usr/share/applications
+          mkdir -p Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps
+          cp -r build/linux/x64/release/bundle/* Quickgui.AppDir/usr/bin/
+
+      # Add Quickgui desktop file
+      - name: Create .desktop file
+        run: |
+          cat <<EOF > Quickgui.AppDir/usr/share/applications/quickgui.desktop
+          [Desktop Entry]
+          Name=Quickgui
+          Exec=quickgui
+          Type=Application
+          Icon=quickgui
+          Comment=An elegant virtual machine manager for the desktop
+          Categories=Utility;
+          EOF
+
+      # Add an icon (assuming one exists in the repo; adjust path if needed)
+      - name: Add icon
+        run: |
+          # Replace with actual icon path if available in repo, or fetch one
+          wget -O Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png \
+            "https://raw.githubusercontent.com/quickemu-project/quickgui/main/assets/icon.png" || \
+            echo "Icon not found; using placeholder" && \
+            convert -size 256x256 xc:white Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png
+
+      # Download and bundle Quickemu binary
+      - name: Bundle Quickemu
+        run: |
+          wget https://github.com/quickemu-project/quickemu/releases/latest/download/quickemu -O Quickgui.AppDir/usr/bin/quickemu
+          chmod +x Quickgui.AppDir/usr/bin/quickemu
+
+      # Install linuxdeploy for AppImage creation
+      - name: Install linuxdeploy
+        run: |
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          mv linuxdeploy-x86_64.AppImage /usr/local/bin/linuxdeploy
+
+      # Create the AppImage
+      - name: Generate AppImage
+        run: |
+          linuxdeploy --appdir Quickgui.AppDir --output appimage
+          mv Quickgui-x86_64.AppImage Quickgui-${{ github.sha }}-x86_64.AppImage
+
+      # Upload the AppImage as an artifact
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quickgui-AppImage
+          path: Quickgui-${{ github.sha }}-x86_64.AppImage
