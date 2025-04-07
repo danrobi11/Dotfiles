@@ -76,7 +76,10 @@ jobs:
 
       # Build Quickgui
       - name: Build Quickgui
-        run: flutter build linux --release
+        run: |
+          flutter build linux --release
+          echo "Listing build output:"
+          ls -l build/linux/x64/release/bundle/
         working-directory: quickgui
 
       # Create AppDir structure
@@ -87,12 +90,21 @@ jobs:
           mkdir -p Quickgui.AppDir/usr/share/applications
           mkdir -p Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps
           cp -r quickgui/build/linux/x64/release/bundle/* Quickgui.AppDir/usr/bin/
-          # Rename the Flutter binary to quickgui if needed
+          # Ensure the binary is named quickgui and executable
+          echo "Checking copied files:"
+          ls -l Quickgui.AppDir/usr/bin/
           if [ -f Quickgui.AppDir/usr/bin/quickgui ]; then
             echo "quickgui binary found"
           else
             echo "Renaming binary to quickgui"
-            mv Quickgui.AppDir/usr/bin/*quickgui* Quickgui.AppDir/usr/bin/quickgui || echo "No quickgui binary found"
+            BINARY=$(ls Quickgui.AppDir/usr/bin/* | grep -i quickgui || ls Quickgui.AppDir/usr/bin/* | head -n 1)
+            if [ -n "$BINARY" ]; then
+              mv "$BINARY" Quickgui.AppDir/usr/bin/quickgui
+              chmod +x Quickgui.AppDir/usr/bin/quickgui
+            else
+              echo "Error: No quickgui-like binary found in build output" >&2
+              exit 1
+            fi
           fi
 
       # Add Quickgui desktop file
@@ -134,11 +146,12 @@ jobs:
           APPDIR=\$(dirname "\$(readlink -f "\$0")")/..
           # Set PATH to include bundled binaries
           export PATH="\$APPDIR/usr/bin:\$PATH"
-          # Verify quickgui exists and run it
-          if [ -f "\$APPDIR/usr/bin/quickgui" ]; then
-            exec "\$APPDIR/usr/bin/quickgui" "\$@"
+          # Find and run quickgui
+          QUICKGUI_BIN="\$APPDIR/usr/bin/quickgui"
+          if [ -f "\$QUICKGUI_BIN" ]; then
+            exec "\$QUICKGUI_BIN" "\$@"
           else
-            echo "Error: quickgui binary not found in \$APPDIR/usr/bin/" >&2
+            echo "Error: quickgui binary not found at \$QUICKGUI_BIN" >&2
             ls -l "\$APPDIR/usr/bin/"
             exit 1
           fi
@@ -152,6 +165,8 @@ jobs:
           ls -l Quickgui.AppDir/usr/bin/
           echo "Checking quickemu:"
           Quickgui.AppDir/usr/bin/quickemu --version || echo "quickemu not executable"
+          echo "Checking quickgui:"
+          Quickgui.AppDir/usr/bin/quickgui --version || echo "quickgui not executable"
           echo "Checking quickgui-wrapper:"
           Quickgui.AppDir/usr/bin/quickgui-wrapper --version || echo "Wrapper failed"
 
@@ -162,10 +177,10 @@ jobs:
           chmod +x linuxdeploy-x86_64.AppImage
           sudo mv linuxdeploy-x86_64.AppImage /usr/local/bin/linuxdeploy
 
-      # Create the AppImage
+      # Create the AppImage with explicit executable
       - name: Generate AppImage
         run: |
-          linuxdeploy --appdir Quickgui.AppDir --output appimage
+          linuxdeploy --appdir Quickgui.AppDir --executable Quickgui.AppDir/usr/bin/quickgui --output appimage
           mv Quickgui-x86_64.AppImage Quickgui-${{ github.sha }}-x86_64.AppImage
 
       # Upload the AppImage as an artifact
