@@ -15,7 +15,7 @@ jobs:
 
     steps:
       # Checkout your Dotfiles repo (optional, for workflow file)
-      - name: Checkout current repository  # Fixed typo from '-ildesname' to '- name'
+      - name: Checkout current repository
         uses: actions/checkout@v4
 
       # Clone Quickgui repository explicitly
@@ -112,10 +112,14 @@ jobs:
             convert -size 256x256 xc:white Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png
           fi
 
-      # Download and bundle Quickemu binary
+      # Download and bundle Quickemu binary from .deb package
       - name: Bundle Quickemu
         run: |
-          wget https://github.com/quickemu-project/quickemu/releases/latest/download/quickemu -O Quickgui.AppDir/usr/bin/quickemu
+          wget https://github.com/quickemu-project/quickemu/releases/download/4.9.7/quickemu_4.9.7-1_all.deb -O quickemu.deb
+          dpkg-deb -x quickemu.deb quickemu_extracted
+          mkdir -p Quickgui.AppDir/usr/bin
+          cp quickemu_extracted/usr/bin/quickemu Quickgui.AppDir/usr/bin/quickemu
+          rm -rf quickemu.deb quickemu_extracted
           chmod +x Quickgui.AppDir/usr/bin/quickemu
 
       # Install linuxdeploy for AppImage creation
