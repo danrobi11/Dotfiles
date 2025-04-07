@@ -15,7 +15,7 @@ jobs:
 
     steps:
       # Checkout your Dotfiles repo (optional, for workflow file)
-      - name: Checkout current repository
+      -ildesname: Checkout current repository
         uses: actions/checkout@v4
 
       # Clone Quickgui repository explicitly
@@ -23,7 +23,7 @@ jobs:
         run: |
           git clone https://github.com/quickemu-project/quickgui.git quickgui
           cd quickgui
-          git checkout main  # Ensure we're on the main branch
+          git checkout main
 
       # Debug: Verify Quickgui checkout
       - name: Debug - Verify Quickgui directory
@@ -38,11 +38,11 @@ jobs:
             exit 1
           fi
 
-      # Set up Flutter
+      # Set up Flutter with a compatible version
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.x'
+          flutter-version: '3.22.x'  # Updated to meet Quickgui's minimum requirement
           channel: 'stable'
 
       # Verify Flutter installation
