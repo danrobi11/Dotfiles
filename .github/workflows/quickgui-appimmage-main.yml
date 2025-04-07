@@ -87,6 +87,13 @@ jobs:
           mkdir -p Quickgui.AppDir/usr/share/applications
           mkdir -p Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps
           cp -r quickgui/build/linux/x64/release/bundle/* Quickgui.AppDir/usr/bin/
+          # Rename the Flutter binary to quickgui if needed
+          if [ -f Quickgui.AppDir/usr/bin/quickgui ]; then
+            echo "quickgui binary found"
+          else
+            echo "Renaming binary to quickgui"
+            mv Quickgui.AppDir/usr/bin/*quickgui* Quickgui.AppDir/usr/bin/quickgui || echo "No quickgui binary found"
+          fi
 
       # Add Quickgui desktop file
       - name: Create .desktop file
@@ -112,14 +119,10 @@ jobs:
             convert -size 256x256 xc:white Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png
           fi
 
-      # Download and bundle Quickemu binary from .deb package
+      # Download and bundle Quickemu script (raw file)
       - name: Bundle Quickemu
         run: |
-          wget https://github.com/quickemu-project/quickemu/releases/download/4.9.7/quickemu_4.9.7-1_all.deb -O quickemu.deb
-          dpkg-deb -x quickemu.deb quickemu_extracted
-          mkdir -p Quickgui.AppDir/usr/bin
-          cp quickemu_extracted/usr/bin/quickemu Quickgui.AppDir/usr/bin/quickemu
-          rm -rf quickemu.deb quickemu_extracted
+          wget https://raw.githubusercontent.com/quickemu-project/quickemu/4.9.7/quickemu -O Quickgui.AppDir/usr/bin/quickemu
           chmod +x Quickgui.AppDir/usr/bin/quickemu
 
       # Create a wrapper script to set PATH for Quickgui
@@ -127,13 +130,30 @@ jobs:
         run: |
           cat <<EOF > Quickgui.AppDir/usr/bin/quickgui-wrapper
           #!/bin/bash
-          # Set the PATH to include the AppImage's usr/bin directory
+          # Get the AppImage's root directory
           APPDIR=\$(dirname "\$(readlink -f "\$0")")/..
+          # Set PATH to include bundled binaries
           export PATH="\$APPDIR/usr/bin:\$PATH"
-          # Launch Quickgui with the bundled quickemu available
-          exec "\$APPDIR/usr/bin/quickgui" "\$@"
+          # Verify quickgui exists and run it
+          if [ -f "\$APPDIR/usr/bin/quickgui" ]; then
+            exec "\$APPDIR/usr/bin/quickgui" "\$@"
+          else
+            echo "Error: quickgui binary not found in \$APPDIR/usr/bin/" >&2
+            ls -l "\$APPDIR/usr/bin/"
+            exit 1
+          fi
           EOF
           chmod +x Quickgui.AppDir/usr/bin/quickgui-wrapper
+
+      # Debug: Verify AppDir contents before AppImage creation
+      - name: Debug - Verify AppDir structure
+        run: |
+          echo "Contents of Quickgui.AppDir/usr/bin:"
+          ls -l Quickgui.AppDir/usr/bin/
+          echo "Checking quickemu:"
+          Quickgui.AppDir/usr/bin/quickemu --version || echo "quickemu not executable"
+          echo "Checking quickgui-wrapper:"
+          Quickgui.AppDir/usr/bin/quickgui-wrapper --version || echo "Wrapper failed"
 
       # Install linuxdeploy for AppImage creation
       - name: Install linuxdeploy
