@@ -94,7 +94,7 @@ jobs:
           cat <<EOF > Quickgui.AppDir/usr/share/applications/quickgui.desktop
           [Desktop Entry]
           Name=Quickgui
-          Exec=quickgui
+          Exec=quickgui-wrapper
           Type=Application
           Icon=quickgui
           Comment=An elegant virtual machine manager for the desktop
@@ -121,6 +121,19 @@ jobs:
           cp quickemu_extracted/usr/bin/quickemu Quickgui.AppDir/usr/bin/quickemu
           rm -rf quickemu.deb quickemu_extracted
           chmod +x Quickgui.AppDir/usr/bin/quickemu
+
+      # Create a wrapper script to set PATH for Quickgui
+      - name: Create Quickgui wrapper script
+        run: |
+          cat <<EOF > Quickgui.AppDir/usr/bin/quickgui-wrapper
+          #!/bin/bash
+          # Set the PATH to include the AppImage's usr/bin directory
+          APPDIR=\$(dirname "\$(readlink -f "\$0")")/..
+          export PATH="\$APPDIR/usr/bin:\$PATH"
+          # Launch Quickgui with the bundled quickemu available
+          exec "\$APPDIR/usr/bin/quickgui" "\$@"
+          EOF
+          chmod +x Quickgui.AppDir/usr/bin/quickgui-wrapper
 
       # Install linuxdeploy for AppImage creation
       - name: Install linuxdeploy
