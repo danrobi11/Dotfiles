@@ -35,30 +35,56 @@ jobs:
         curl -sLO https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/continuous/linuxdeploy-plugin-appimage-x86_64.AppImage
         chmod +x linuxdeploy-plugin-appimage-x86_64.AppImage
 
-    # --- Corrected Step for Quickemu ---
+    # --- Corrected Step for Quickemu using tarball_url ---
     - name: Download latest Quickemu script
       id: download_quickemu
       run: |
-        # Get the latest release source tarball URL (.orig.tar.gz)
-        QUICKEMU_LATEST_SOURCE_URL=$(curl -s "https://api.github.com/repos/quickemu-project/quickemu/releases/latest" | jq -r '.assets[] | select(.name | endswith(".orig.tar.gz")) | .browser_download_url')
+        # Get the latest release source tarball URL (GitHub standard)
+        QUICKEMU_LATEST_TARBALL_URL=$(curl -s "https://api.github.com/repos/quickemu-project/quickemu/releases/latest" | jq -r '.tarball_url')
 
-        if [ -z "$QUICKEMU_LATEST_SOURCE_URL" ] || [ "$QUICKEMU_LATEST_SOURCE_URL" == "null" ]; then
-          echo "::error::Could not find latest Quickemu source tar.gz (.orig.tar.gz) release asset."
+        if [ -z "$QUICKEMU_LATEST_TARBALL_URL" ] || [ "$QUICKEMU_LATEST_TARBALL_URL" == "null" ]; then
+          echo "::error::Could not find latest Quickemu release tarball URL via GitHub API."
+          # Adding full API response for debugging if jq fails
+          echo "::debug::API Response:"
+          curl -s "https://api.github.com/repos/quickemu-project/quickemu/releases/latest"
           exit 1
         fi
 
-        echo "Downloading Quickemu source from: $QUICKEMU_LATEST_SOURCE_URL"
-        curl -sLo quickemu_source.tar.gz "$QUICKEMU_LATEST_SOURCE_URL"
+        echo "Downloading Quickemu source tarball from: $QUICKEMU_LATEST_TARBALL_URL"
+        # Use -L with curl to follow redirects, as tarball_url often redirects
+        curl -sL -o quickemu_source.tar.gz "$QUICKEMU_LATEST_TARBALL_URL"
+
+        # --- Basic Download Verification ---
+        if [ ! -s quickemu_source.tar.gz ]; then
+            echo "::error::Downloaded quickemu_source.tar.gz is empty or download failed."
+            exit 1
+        fi
+        # Quick check if it's a valid tar.gz archive
+        if ! tar -tzf quickemu_source.tar.gz > /dev/null; then
+            echo "::error::Downloaded quickemu_source.tar.gz does not appear to be a valid tarball."
+            # Attempt to display first few lines if it's text (e.g., an error page)
+            if file quickemu_source.tar.gz | grep -q 'text'; then
+              echo "::error::File content starts with:"
+              head -n 5 quickemu_source.tar.gz
+            fi
+            exit 1
+        fi
+        # --- End Verification ---
 
         # Extract the quickemu script
         mkdir -p quickemu_extracted
-        # Extract the archive
-        tar -xzf quickemu_source.tar.gz -C quickemu_extracted
-        # Find the 'quickemu' script within the extracted directory (usually quickemu-VERSION/quickemu)
-        QUICKEMU_SCRIPT=$(find quickemu_extracted -path '*/quickemu' -type f -print -quit) # Find the main script, stop after first find
+        # Extract the archive - use --strip-components=1 to remove the top-level directory (e.g., quickemu-project-quickemu-xxxxxxx/)
+        tar -xzf quickemu_source.tar.gz -C quickemu_extracted --strip-components=1
 
-        if [ -z "$QUICKEMU_SCRIPT" ]; then
-           echo "::error::Could not find 'quickemu' script within the downloaded source archive."
+        # Find the 'quickemu' script within the extracted directory
+        # After stripping the top component, it should be directly inside quickemu_extracted
+        QUICKEMU_SCRIPT="quickemu_extracted/quickemu"
+
+        if [ ! -f "$QUICKEMU_SCRIPT" ]; then
+           echo "::error::Could not find 'quickemu' script at '$QUICKEMU_SCRIPT' after extraction."
+           # Add debug listing to see what was extracted
+           echo "::debug::Contents of quickemu_extracted directory:"
+           ls -lA quickemu_extracted
            exit 1
         fi
 
