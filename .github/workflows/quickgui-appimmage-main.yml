@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
 
 jobs:
   build:
@@ -22,11 +22,17 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.x'  # Use a stable version compatible with Quickgui
+          flutter-version: '3.19.x'
           channel: 'stable'
-      - run: flutter --version
-      - run: flutter config --enable-linux-desktop
-      - run: flutter pub get
+      - name: Verify Flutter setup
+        run: flutter --version
+        working-directory: .  # Ensure we're in the repo root
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+        working-directory: .
+      - name: Get Flutter dependencies
+        run: flutter pub get
+        working-directory: .
 
       # Install dependencies for building and AppImage creation
       - name: Install system dependencies
@@ -39,11 +45,13 @@ jobs:
             file \
             libgtk-3-dev \
             libfuse2 \
-            wget
+            wget \
+            imagemagick  # For icon manipulation
 
       # Build Quickgui
       - name: Build Quickgui
         run: flutter build linux --release
+        working-directory: .
 
       # Create AppDir structure
       - name: Set up AppDir
@@ -67,14 +75,16 @@ jobs:
           Categories=Utility;
           EOF
 
-      # Add an icon (assuming one exists in the repo; adjust path if needed)
+      # Add an icon (check repo or use placeholder)
       - name: Add icon
         run: |
-          # Replace with actual icon path if available in repo, or fetch one
-          wget -O Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png \
-            "https://raw.githubusercontent.com/quickemu-project/quickgui/main/assets/icon.png" || \
-            echo "Icon not found; using placeholder" && \
+          ICON_PATH="assets/icon.png"  # Adjust if icon is in a different location
+          if [ -f "$ICON_PATH" ]; then
+            cp "$ICON_PATH" Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png
+          else
+            echo "Icon not found in repo; using placeholder"
             convert -size 256x256 xc:white Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png
+          fi
 
       # Download and bundle Quickemu binary
       - name: Bundle Quickemu
@@ -87,7 +97,7 @@ jobs:
         run: |
           wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage
-          mv linuxdeploy-x86_64.AppImage /usr/local/bin/linuxdeploy
+          sudo mv linuxdeploy-x86_64.AppImage /usr/local/bin/linuxdeploy
 
       # Create the AppImage
       - name: Generate AppImage
