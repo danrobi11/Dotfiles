@@ -31,10 +31,7 @@ jobs:
       - name: Clone Surf repository
         run: |
           git clone https://git.suckless.org/surf
-          ls -la
           cd surf || { echo "Failed to cd into surf"; exit 1; }
-          pwd
-          ls -la
 
       - name: Build Surf
         run: |
@@ -48,33 +45,31 @@ jobs:
           cp surf/surf surf-portable/ || { echo "Failed to copy surf"; exit 1; }
           cp surf/webext-surf.so surf-portable/lib/ || { echo "Failed to copy webext-surf.so"; exit 1; }
           chmod +x surf-portable/surf
-          # Copy all dependencies using lddtree with verbose output
+          # Copy all dependencies
           lddtree -l surf/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
           lddtree -l surf/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
           cat surf-deps.txt webext-deps.txt | sort -u | while read -r lib; do
             [ -f "$lib" ] && cp --parents "$lib" surf-portable/lib/ || echo "Skipping missing library: $lib"
           done
-          # Explicitly copy all GCR libraries
           find /usr/lib/x86_64-linux-gnu -name 'libgcr*.so*' -exec cp {} surf-portable/lib/ \; || echo "No GCR libraries found"
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
           echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" "$DIR/surf" "$@"' >> surf-portable/surf-wrapper.sh
           chmod +x surf-portable/surf-wrapper.sh
-          # Debug output
           ls -la surf-portable/
           ls -la surf-portable/lib/
           du -sh surf-portable/
-          # Verify specific libraries
-          ls -l surf-portable/lib/libgcr-ui-3.so.1 surf-portable/lib/libgcr-base-3.so.1 || echo "GCR libraries missing"
 
       - name: Test Surf binary
         run: |
           cd surf-portable
-          LD_LIBRARY_PATH=./lib ./surf --version || { echo "Surf failed to run"; exit 1; }
+          # Test by running Surf with no arguments (should print usage and exit)
+          LD_LIBRARY_PATH=./lib ./surf || { echo "Surf failed to run"; exit 1; }
           echo "Surf ran successfully"
 
       - name: Upload Surf binary
+        if: always()  # Upload even if test fails
         uses: actions/upload-artifact@v4
         with:
           name: surf-portable-binary
