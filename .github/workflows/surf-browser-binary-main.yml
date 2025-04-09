@@ -48,16 +48,23 @@ jobs:
           cp surf/surf surf-portable/ || { echo "Failed to copy surf"; exit 1; }
           cp surf/webext-surf.so surf-portable/lib/ || { echo "Failed to copy webext-surf.so"; exit 1; }
           chmod +x surf-portable/surf
-          # Use lddtree to copy full dependency tree
-          lddtree surf/surf | grep "=>" | awk '{print $3}' | sort -u | xargs -I {} cp --parents {} surf-portable/lib/ || { echo "Failed to copy surf dependencies"; exit 1; }
-          lddtree surf/webext-surf.so | grep "=>" | awk '{print $3}' | sort -u | xargs -I {} cp --parents {} surf-portable/lib/ || { echo "Failed to copy webext-surf.so dependencies"; exit 1; }
-          # Create a wrapper script to set LD_LIBRARY_PATH
+          # Copy full dependency tree with lddtree
+          lddtree surf/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
+          lddtree surf/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
+          cat surf-deps.txt webext-deps.txt | grep "=>" | awk '{print $3}' | sort -u | xargs -I {} cp --parents {} surf-portable/lib/ || { echo "Failed to copy dependencies"; exit 1; }
+          # Explicitly copy libgcr-ui-3.so.1 if present
+          if [ -f /usr/lib/x86_64-linux-gnu/libgcr-ui-3.so.1 ]; then cp /usr/lib/x86_64-linux-gnu/libgcr-ui-3.so.1 surf-portable/lib/; fi
+          # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
           echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" "$DIR/surf" "$@"' >> surf-portable/surf-wrapper.sh
           chmod +x surf-portable/surf-wrapper.sh
+          # Debug output
           ls -la surf-portable/
+          ls -la surf-portable/lib/
           du -sh surf-portable/
+          # Verify libgcr-ui-3.so.1 presence
+          ls -l surf-portable/lib/libgcr-ui-3.so.1 || echo "libgcr-ui-3.so.1 not found in surf-portable/lib/"
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
