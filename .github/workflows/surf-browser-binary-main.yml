@@ -30,26 +30,27 @@ jobs:
       - name: Clone Surf repository
         run: |
           git clone https://git.suckless.org/surf
-          ls -la  # Debug: List directory contents
-          cd surf || { echo "Failed to enter surf directory"; exit 1; }
-          pwd     # Debug: Confirm current directory
-          ls -la  # Debug: List surf directory contents
+          ls -la
+          cd surf || { echo "Failed to cd into surf"; exit 1; }
+          pwd
+          ls -la
 
       - name: Build Surf
         run: |
-          cd surf || { echo "Failed to enter surf directory"; exit 1; }
-          make
-          ls -l surf webext-surf.so  # Debug: Verify binaries exist
+          cd surf || { echo "Failed to cd into surf"; exit 1; }
+          make || { echo "Make failed"; exit 1; }
+          ls -l surf webext-surf.so || { echo "Binaries not found"; exit 1; }
 
       - name: Prepare portable binary
         run: |
-          mkdir -p surf-portable
-          cp surf/surf surf-portable/
-          cp surf/webext-surf.so surf-portable/
+          mkdir -p surf-portable || { echo "Failed to create surf-portable"; exit 1; }
+          cp surf/surf surf-portable/ || { echo "Failed to copy surf"; exit 1; }
+          cp surf/webext-surf.so surf-portable/ || { echo "Failed to copy webext-surf.so"; exit 1; }
           chmod +x surf-portable/surf
-          ldd surf/surf | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/
-          ldd surf/webext-surf.so | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/
-          ls -la surf-portable/  # Debug: Verify portable directory contents
+          ldd surf/surf | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/ || { echo "Failed to copy surf dependencies"; exit 1; }
+          ldd surf/webext-surf.so | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/ || { echo "Failed to copy webext-surf.so dependencies"; exit 1; }
+          ls -la surf-portable/ || { echo "Failed to list surf-portable contents"; exit 1; }
+          du -sh surf-portable/  # Show size of portable directory
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
