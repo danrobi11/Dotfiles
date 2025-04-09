@@ -1,0 +1,61 @@
+name: Build Surf Browser
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Check out the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      # Install dependencies (Ubuntu/Debian-based)
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git \
+            build-essential \
+            libwebkit2gtk-4.0-dev \
+            libgtk-3-dev \
+            libgcr-3-dev \
+            pkg-config \
+            curl
+
+      # Clone Surf repository
+      - name: Clone Surf repository
+        run: |
+          git clone https://git.suckless.org/surf
+          cd surf
+          git checkout master
+
+      # Build Surf
+      - name: Build Surf
+        run: |
+          cd surf
+          make
+          make clean objects  # Ensure we have a clean build
+
+      # Create portable binary directory
+      - name: Prepare portable binary
+        run: |
+          mkdir -p surf-portable
+          cp surf/surf surf-portable/
+          chmod +x surf-portable/surf
+          # Get shared library dependencies
+          ldd surf/surf | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/
+
+      # Create artifact
+      - name: Upload Surf binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: surf-portable-binary
+          path: surf-portable/
+          retention-days: 7
