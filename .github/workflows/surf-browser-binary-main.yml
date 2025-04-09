@@ -30,22 +30,26 @@ jobs:
       - name: Clone Surf repository
         run: |
           git clone https://git.suckless.org/surf
-          cd surf
+          ls -la  # Debug: List directory contents
+          cd surf || { echo "Failed to enter surf directory"; exit 1; }
+          pwd     # Debug: Confirm current directory
+          ls -la  # Debug: List surf directory contents
 
       - name: Build Surf
         run: |
-          cd surf
-          make  # Builds surf and webext-surf.so
-          # Do not run 'make clean' here to preserve binaries
+          cd surf || { echo "Failed to enter surf directory"; exit 1; }
+          make
+          ls -l surf webext-surf.so  # Debug: Verify binaries exist
 
       - name: Prepare portable binary
         run: |
           mkdir -p surf-portable
           cp surf/surf surf-portable/
-          cp surf/webext-surf.so surf-portable/  # Include the web extension
+          cp surf/webext-surf.so surf-portable/
           chmod +x surf-portable/surf
           ldd surf/surf | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/
           ldd surf/webext-surf.so | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/
+          ls -la surf-portable/  # Debug: Verify portable directory contents
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
