@@ -1,4 +1,4 @@
-nameOwners: Build Surf Browser
+name: Build Surf Browser  # Fixed from 'nameOwners' to 'name'
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04  # Using 22.04 for libwebkit2gtk-4.0-dev availability
+    runs-on: ubuntu-22.04
     
     steps:
       - name: Checkout repository
@@ -31,7 +31,7 @@ jobs:
         run: |
           git clone https://git.suckless.org/surf
           cd surf
-          # No git checkout needed; default branch is cloned
+          # Using default branch; no checkout needed
 
       - name: Build Surf
         run: |
