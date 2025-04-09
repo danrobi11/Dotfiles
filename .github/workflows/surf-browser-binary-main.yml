@@ -26,7 +26,7 @@ jobs:
             libgcr-3-dev \
             pkg-config \
             curl \
-            pax-utils  # For lddtree
+            pax-utils
 
       - name: Clone Surf repository
         run: |
@@ -48,12 +48,14 @@ jobs:
           cp surf/surf surf-portable/ || { echo "Failed to copy surf"; exit 1; }
           cp surf/webext-surf.so surf-portable/lib/ || { echo "Failed to copy webext-surf.so"; exit 1; }
           chmod +x surf-portable/surf
-          # Copy full dependency tree with lddtree
-          lddtree surf/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
-          lddtree surf/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
-          cat surf-deps.txt webext-deps.txt | grep "=>" | awk '{print $3}' | sort -u | xargs -I {} cp --parents {} surf-portable/lib/ || { echo "Failed to copy dependencies"; exit 1; }
-          # Explicitly copy libgcr-ui-3.so.1 if present
-          if [ -f /usr/lib/x86_64-linux-gnu/libgcr-ui-3.so.1 ]; then cp /usr/lib/x86_64-linux-gnu/libgcr-ui-3.so.1 surf-portable/lib/; fi
+          # Copy all dependencies using lddtree with verbose output
+          lddtree -l surf/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
+          lddtree -l surf/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
+          cat surf-deps.txt webext-deps.txt | sort -u | while read -r lib; do
+            [ -f "$lib" ] && cp --parents "$lib" surf-portable/lib/ || echo "Skipping missing library: $lib"
+          done
+          # Explicitly copy all GCR libraries
+          find /usr/lib/x86_64-linux-gnu -name 'libgcr*.so*' -exec cp {} surf-portable/lib/ \; || echo "No GCR libraries found"
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
@@ -63,8 +65,14 @@ jobs:
           ls -la surf-portable/
           ls -la surf-portable/lib/
           du -sh surf-portable/
-          # Verify libgcr-ui-3.so.1 presence
-          ls -l surf-portable/lib/libgcr-ui-3.so.1 || echo "libgcr-ui-3.so.1 not found in surf-portable/lib/"
+          # Verify specific libraries
+          ls -l surf-portable/lib/libgcr-ui-3.so.1 surf-portable/lib/libgcr-base-3.so.1 || echo "GCR libraries missing"
+
+      - name: Test Surf binary
+        run: |
+          cd surf-portable
+          LD_LIBRARY_PATH=./lib ./surf --version || { echo "Surf failed to run"; exit 1; }
+          echo "Surf ran successfully"
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
