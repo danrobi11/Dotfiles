@@ -1,4 +1,4 @@
-name: Build Surf Browser
+nameOwners: Build Surf Browser
 
 on:
   push:
@@ -9,17 +9,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # Using 22.04 for libwebkit2gtk-4.0-dev availability
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Add Jammy repository and install dependencies
+      - name: Install build dependencies
         run: |
-          sudo apt-get update
-          # Add Ubuntu 22.04 (Jammy) repository
-          echo "deb http://archive.ubuntu.com/ubuntu jammy main universe" | sudo tee /etc/apt/sources.list.d/jammy.list
           sudo apt-get update
           sudo apt-get install -y \
             git \
@@ -34,7 +31,7 @@ jobs:
         run: |
           git clone https://git.suckless.org/surf
           cd surf
-          git checkout master
+          # No git checkout needed; default branch is cloned
 
       - name: Build Surf
         run: |
