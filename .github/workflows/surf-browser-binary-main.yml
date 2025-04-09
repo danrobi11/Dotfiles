@@ -25,7 +25,8 @@ jobs:
             libgtk-3-dev \
             libgcr-3-dev \
             pkg-config \
-            curl
+            curl \
+            pax-utils  # For lddtree
 
       - name: Clone Surf repository
         run: |
@@ -43,14 +44,20 @@ jobs:
 
       - name: Prepare portable binary
         run: |
-          mkdir -p surf-portable || { echo "Failed to create surf-portable"; exit 1; }
+          mkdir -p surf-portable/lib || { echo "Failed to create surf-portable"; exit 1; }
           cp surf/surf surf-portable/ || { echo "Failed to copy surf"; exit 1; }
-          cp surf/webext-surf.so surf-portable/ || { echo "Failed to copy webext-surf.so"; exit 1; }
+          cp surf/webext-surf.so surf-portable/lib/ || { echo "Failed to copy webext-surf.so"; exit 1; }
           chmod +x surf-portable/surf
-          ldd surf/surf | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/ || { echo "Failed to copy surf dependencies"; exit 1; }
-          ldd surf/webext-surf.so | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/ || { echo "Failed to copy webext-surf.so dependencies"; exit 1; }
-          ls -la surf-portable/ || { echo "Failed to list surf-portable contents"; exit 1; }
-          du -sh surf-portable/  # Show size of portable directory
+          # Use lddtree to copy full dependency tree
+          lddtree surf/surf | grep "=>" | awk '{print $3}' | sort -u | xargs -I {} cp --parents {} surf-portable/lib/ || { echo "Failed to copy surf dependencies"; exit 1; }
+          lddtree surf/webext-surf.so | grep "=>" | awk '{print $3}' | sort -u | xargs -I {} cp --parents {} surf-portable/lib/ || { echo "Failed to copy webext-surf.so dependencies"; exit 1; }
+          # Create a wrapper script to set LD_LIBRARY_PATH
+          echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
+          echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
+          echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" "$DIR/surf" "$@"' >> surf-portable/surf-wrapper.sh
+          chmod +x surf-portable/surf-wrapper.sh
+          ls -la surf-portable/
+          du -sh surf-portable/
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
