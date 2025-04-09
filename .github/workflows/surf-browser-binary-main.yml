@@ -1,4 +1,4 @@
-name: Build Surf Browser  # Fixed from 'nameOwners' to 'name'
+name: Build Surf Browser
 
 on:
   push:
@@ -31,20 +31,21 @@ jobs:
         run: |
           git clone https://git.suckless.org/surf
           cd surf
-          # Using default branch; no checkout needed
 
       - name: Build Surf
         run: |
           cd surf
-          make
-          make clean objects
+          make  # Builds surf and webext-surf.so
+          # Do not run 'make clean' here to preserve binaries
 
       - name: Prepare portable binary
         run: |
           mkdir -p surf-portable
           cp surf/surf surf-portable/
+          cp surf/webext-surf.so surf-portable/  # Include the web extension
           chmod +x surf-portable/surf
           ldd surf/surf | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/
+          ldd surf/webext-surf.so | grep "=>" | awk '{print $3}' | xargs -I {} cp {} surf-portable/
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
