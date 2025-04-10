@@ -133,10 +133,14 @@ jobs:
           find /usr/lib/x86_64-linux-gnu -name 'libX11*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No X11 libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libffi*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No FFI libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libatspi*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No ATSPI libraries found"
-          # Create wrapper script
+          # Create wrapper script with debug output
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
-          echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" WEBKIT_EXEC_PATH="$DIR/lib/webkit2gtk-4.0" "$DIR/surf" "$@"' >> surf-portable/surf-wrapper.sh
+          echo 'export LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH"' >> surf-portable/surf-wrapper.sh
+          echo 'export WEBKIT_EXEC_PATH="$DIR/lib/webkit2gtk-4.0"' >> surf-portable/surf-wrapper.sh
+          echo 'echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"' >> surf-portable/surf-wrapper.sh
+          echo 'echo "WEBKIT_EXEC_PATH=$WEBKIT_EXEC_PATH"' >> surf-portable/surf-wrapper.sh
+          echo '"$DIR/surf" "$@"' >> surf-portable/surf-wrapper.sh
           chmod +x surf-portable/surf-wrapper.sh
           # Debug output
           ls -la surf-portable/
