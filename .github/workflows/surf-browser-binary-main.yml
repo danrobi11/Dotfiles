@@ -75,6 +75,7 @@ jobs:
             -DUSE_SYSTEMD=OFF \
             -DUSE_SOUP2=ON \
             -DUSE_WPE_RENDERER=OFF \
+            -DUSE_LIBNOTIFY=OFF \
             -GNinja ..
           ninja || { echo "WebKitGTK build failed"; exit 1; }
           ninja install || { echo "WebKitGTK install failed"; exit 1; }
