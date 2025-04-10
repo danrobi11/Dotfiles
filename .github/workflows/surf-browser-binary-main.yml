@@ -45,6 +45,9 @@ jobs:
           cp surf/surf surf-portable/ || { echo "Failed to copy surf"; exit 1; }
           cp surf/webext-surf.so surf-portable/lib/ || { echo "Failed to copy webext-surf.so"; exit 1; }
           chmod +x surf-portable/surf
+          # Copy WebKit helper binaries
+          mkdir -p surf-portable/lib/webkit2gtk-4.0
+          cp -v /usr/lib/x86_64-linux-gnu/webkit2gtk-4.0/* surf-portable/lib/webkit2gtk-4.0/ || echo "Failed to copy WebKit helpers"
           # Copy all dependencies with lddtree
           lddtree -l surf/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
           lddtree -l surf/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
@@ -133,14 +136,15 @@ jobs:
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
-          echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" "$DIR/surf" "$@"' >> surf-portable/surf-wrapper.sh
+          echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" WEBKIT_EXEC_PATH="$DIR/lib/webkit2gtk-4.0" "$DIR/surf" "$@"' >> surf-port.Tooltipable/surf-wrapper.sh
           chmod +x surf-portable/surf-wrapper.sh
           # Debug output
           ls -la surf-portable/
           ls -la surf-portable/lib/
+          ls -la surf-portable/lib/webkit2gtk-4.0/
           du -sh surf-portable/
-          # Check critical libraries
-          ls -l surf-portable/lib/libatspi.so.0 surf-portable/lib/libffi.so.8 surf-portable/lib/libunwind.so.8 surf-portable/lib/libatomic.so.1 surf-portable/lib/libpcre.so.3 surf-portable/lib/libselinux.so.1 surf-portable/lib/libXdamage.so.1 surf-portable/lib/libmanette-0.2.so.0 surf-portable/lib/libhyphen.so.0 surf-portable/lib/libsecret-1.so.0 surf-portable/lib/libenchant-2.so.2 surf-portable/lib/libsoup-2.4.so.1 surf-portable/lib/libgstallocators-1.0.so.0 surf-portable/lib/libwoff2dec.so.1.0.2 surf-portable/lib/liblcms2.so.2 surf-portable/lib/libxslt.so.1 surf-portable/lib/libatk-1.0.so.0 surf-portable/lib/libsystemd.so.0 surf-portable/lib/libicui18n.so.70 surf-portable/lib/libjavascriptcoregtk-4.0.so.18 surf-portable/lib/libwebpmux.so.3 surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 || echo "Critical libraries missing"
+          # Check critical libraries and helpers
+          ls -l surf-portable/lib/libatspi.so.0 surf-portable/lib/libffi.so.8 surf-portable/lib/libunwind.so.8 surf-portable/lib/libatomic.so.1 surf-portable/lib/libpcre.so.3 surf-portable/lib/libselinux.so.1 surf-portable/lib/libXdamage.so.1 surf-portable/lib/libmanette-0.2.so.0 surf-portable/lib/libhyphen.so.0 surf-portable/lib/libsecret-1.so.0 surf-portable/lib/libenchant-2.so.2 surf-portable/lib/libsoup-2.4.so.1 surf-portable/lib/libgstallocators-1.0.so.0 surf-portable/lib/libwoff2dec.so.1.0.2 surf-portable/lib/liblcms2.so.2 surf-portable/lib/libxslt.so.1 surf-portable/lib/libatk-1.0.so.0 surf-portable/lib/libsystemd.so.0 surf-portable/lib/libicui18n.so.70 surf-portable/lib/libjavascriptcoregtk-4.0.so.18 surf-portable/lib/libwebpmux.so.3 surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 surf-portable/lib/webkit2gtk-4.0/WebKitNetworkProcess surf-portable/lib/webkit2gtk-4.0/WebKitWebProcess || echo "Critical libraries or helpers missing"
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
