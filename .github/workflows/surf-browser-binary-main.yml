@@ -50,6 +50,7 @@ jobs:
             libunwind-dev \
             libffi-dev \
             libatspi2.0-dev \
+            libtasn1-dev \
             ruby \
             python3 \
             curl \
