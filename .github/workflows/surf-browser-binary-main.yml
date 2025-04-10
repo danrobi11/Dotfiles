@@ -55,6 +55,7 @@ jobs:
             libatspi2.0-dev \
             libtasn1-dev \
             gperf \
+            gettext \
             ruby \
             python3 \
             curl \
