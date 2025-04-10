@@ -49,11 +49,12 @@ jobs:
           lddtree -l surf/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
           lddtree -l surf/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
           cat surf-deps.txt webext-deps.txt | sort -u | while read -r lib; do
-            [ -f "$lib" ] && cp --parents "$lib" surf-portable/lib/ || echo "Skipping missing library: $lib"
+            [ -f "$lib" ] && cp -v --parents "$lib" surf-portable/lib/ || echo "Skipping missing library: $lib"
           done
-          # Explicitly copy all GCR, GTK, and WebKit libraries with symlinks
+          # Explicitly copy all critical libraries with symlinks resolved
           find /usr/lib/x86_64-linux-gnu -name 'libgcr*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GCR libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libgtk*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GTK libraries found"
+          find /usr/lib/x86_64-linux-gnu -name 'libgdk*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GDK libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libwebkit*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No WebKit libraries found"
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
@@ -64,8 +65,8 @@ jobs:
           ls -la surf-portable/
           ls -la surf-portable/lib/
           du -sh surf-portable/
-          # Check critical WebKit library
-          ls -l surf-portable/lib/libwebkit2gtk-4.0.so.37 || echo "libwebkit2gtk-4.0.so.37 not found"
+          # Check critical libraries
+          ls -l surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 || echo "Critical libraries missing"
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
