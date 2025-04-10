@@ -129,6 +129,7 @@ jobs:
           find /usr/lib/x86_64-linux-gnu -name 'libp11-kit*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No P11-Kit libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libX11*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No X11 libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libffi*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No FFI libraries found"
+          find /usr/lib/x86_64-linux-gnu -name 'libatspi*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No ATSPI libraries found"
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
@@ -139,7 +140,7 @@ jobs:
           ls -la surf-portable/lib/
           du -sh surf-portable/
           # Check critical libraries
-          ls -l surf-portable/lib/libffi.so.8 surf-portable/lib/libunwind.so.8 surf-portable/lib/libatomic.so.1 surf-portable/lib/libpcre.so.3 surf-portable/lib/libselinux.so.1 surf-portable/lib/libXdamage.so.1 surf-portable/lib/libmanette-0.2.so.0 surf-portable/lib/libhyphen.so.0 surf-portable/lib/libsecret-1.so.0 surf-portable/lib/libenchant-2.so.2 surf-portable/lib/libsoup-2.4.so.1 surf-portable/lib/libgstallocators-1.0.so.0 surf-portable/lib/libwoff2dec.so.1.0.2 surf-portable/lib/liblcms2.so.2 surf-portable/lib/libxslt.so.1 surf-portable/lib/libatk-1.0.so.0 surf-portable/lib/libsystemd.so.0 surf-portable/lib/libicui18n.so.70 surf-portable/lib/libjavascriptcoregtk-4.0.so.18 surf-portable/lib/libwebpmux.so.3 surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 || echo "Critical libraries missing"
+          ls -l surf-portable/lib/libatspi.so.0 surf-portable/lib/libffi.so.8 surf-portable/lib/libunwind.so.8 surf-portable/lib/libatomic.so.1 surf-portable/lib/libpcre.so.3 surf-portable/lib/libselinux.so.1 surf-portable/lib/libXdamage.so.1 surf-portable/lib/libmanette-0.2.so.0 surf-portable/lib/libhyphen.so.0 surf-portable/lib/libsecret-1.so.0 surf-portable/lib/libenchant-2.so.2 surf-portable/lib/libsoup-2.4.so.1 surf-portable/lib/libgstallocators-1.0.so.0 surf-portable/lib/libwoff2dec.so.1.0.2 surf-portable/lib/liblcms2.so.2 surf-portable/lib/libxslt.so.1 surf-portable/lib/libatk-1.0.so.0 surf-portable/lib/libsystemd.so.0 surf-portable/lib/libicui18n.so.70 surf-portable/lib/libjavascriptcoregtk-4.0.so.18 surf-portable/lib/libwebpmux.so.3 surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 || echo "Critical libraries missing"
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
