@@ -57,6 +57,12 @@ jobs:
           find /usr/lib/x86_64-linux-gnu -name 'libgtk*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GTK libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libgdk*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GDK libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libwebkit*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No WebKit libraries found"
+          find /usr/lib/x86_64-linux-gnu -name 'libwebp*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No WebP libraries found"
+          # Additional common dependencies for WebKitGTK
+          find /usr/lib/x86_64-linux-gnu -name 'libpng*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No PNG libraries found"
+          find /usr/lib/x86_64-linux-gnu -name 'libjpeg*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No JPEG libraries found"
+          find /usr/lib/x86_64-linux-gnu -name 'libgio*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GIO libraries found"
+          find /usr/lib/x86_64-linux-gnu -name 'libglib*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GLib libraries found"
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
@@ -67,7 +73,7 @@ jobs:
           ls -la surf-portable/lib/
           du -sh surf-portable/
           # Check critical libraries
-          ls -l surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 || echo "Critical libraries missing"
+          ls -l surf-portable/lib/libwebpmux.so.3 surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 || echo "Critical libraries missing"
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
