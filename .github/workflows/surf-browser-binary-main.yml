@@ -78,6 +78,7 @@ jobs:
             -DUSE_LIBNOTIFY=OFF \
             -DENABLE_JOURNALD_LOG=OFF \
             -DUSE_GTK4=OFF \
+            -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
             -GNinja ..
           ninja || { echo "WebKitGTK build failed"; exit 1; }
           ninja install || { echo "WebKitGTK install failed"; exit 1; }
