@@ -58,7 +58,7 @@ jobs:
 
       - name: Clone WebKitGTK
         run: |
-          git clone --depth 50 https://github.com/WebKit/WebKit.git webkitgtk
+          git clone https://github.com/WebKit/WebKit.git webkitgtk
           cd webkitgtk || { echo "Failed to cd into webkitgtk"; exit 1; }
           git checkout 8284df1e1c0c80b17c26849451764d719ba8e424 || { echo "Failed to checkout commit"; exit 1; }
 
