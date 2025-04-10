@@ -69,6 +69,7 @@ jobs:
           find /usr/lib/x86_64-linux-gnu -name 'libxslt*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No XSLT libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'liblcms2*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No LCMS2 libraries found"
           find /usr/lib/x86_64-linux-gnu -name 'libwoff2*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No WOFF2 libraries found"
+          find /usr/lib/x86_64-linux-gnu -name 'libgst*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GStreamer libraries found"
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
@@ -79,7 +80,7 @@ jobs:
           ls -la surf-portable/lib/
           du -sh surf-portable/
           # Check critical libraries
-          ls -l surf-portable/lib/libwoff2dec.so.1.0.2 surf-portable/lib/liblcms2.so.2 surf-portable/lib/libxslt.so.1 surf-portable/lib/libatk-1.0.so.0 surf-portable/lib/libsystemd.so.0 surf-portable/lib/libicui18n.so.70 surf-portable/lib/libjavascriptcoregtk-4.0.so.18 surf-portable/lib/libwebpmux.so.3 surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 || echo "Critical libraries missing"
+          ls -l surf-portable/lib/libgstallocators-1.0.so.0 surf-portable/lib/libwoff2dec.so.1.0.2 surf-portable/lib/liblcms2.so.2 surf-portable/lib/libxslt.so.1 surf-portable/lib/libatk-1.0.so.0 surf-portable/lib/libsystemd.so.0 surf-portable/lib/libicui18n.so.70 surf-portable/lib/libjavascriptcoregtk-4.0.so.18 surf-portable/lib/libwebpmux.so.3 surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 || echo "Critical libraries missing"
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
