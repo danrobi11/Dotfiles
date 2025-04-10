@@ -72,6 +72,7 @@ jobs:
             -DENABLE_INTROSPECTION=OFF \
             -DENABLE_DOCUMENTATION=OFF \
             -DUSE_SYSTEMD=OFF \
+            -DUSE_SOUP2=ON \
             -GNinja ..
           ninja || { echo "WebKitGTK build failed"; exit 1; }
           ninja install || { echo "WebKitGTK install failed"; exit 1; }
