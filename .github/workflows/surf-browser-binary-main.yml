@@ -1,4 +1,4 @@
-name: Build Surf Browser
+name: Build Surf Browser with Custom WebKitGTK
 
 on:
   push:
@@ -21,36 +21,70 @@ jobs:
           sudo apt-get install -y \
             git \
             build-essential \
-            libwebkit2gtk-4.0-dev \
+            cmake \
+            ninja-build \
             libgtk-3-dev \
             libgcr-3-dev \
-            pkg-config \
+            libwebkit2gtk-4.0-dev \
+            libxslt1-dev \
+            libxml2-dev \
+            libsoup2.4-dev \
+            libsecret-1-dev \
+            libgstreamer1.0-dev \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            libharfbuzz-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libpng-dev \
+            libjpeg-dev \
+            libwebp-dev \
+            libsqlite3-dev \
+            libicu-dev \
+            libenchant-2-dev \
+            libhyphen-dev \
+            libmanette-0.2-dev \
+            libwoff-dev \
+            libopenjp2-7-dev \
+            libp11-kit-dev \
+            libunwind-dev \
+            libffi-dev \
+            libatspi2.0-dev \
+            ruby \
+            python3 \
             curl \
             pax-utils  # For lddtree
 
-      - name: Clone and Patch Surf repository
+      - name: Clone WebKitGTK
+        run: |
+          git clone --depth 1 --branch webkitgtk-2.36.8 https://github.com/WebKit/WebKit.git webkitgtk
+          cd webkitgtk || { echo "Failed to cd into webkitgtk"; exit 1; }
+
+      - name: Build and Install WebKitGTK
+        run: |
+          cd webkitgtk
+          mkdir build
+          cd build
+          cmake \
+            -DCMAKE_INSTALL_PREFIX=/home/runner/work/Dotfiles/Dotfiles/surf-portable/usr \
+            -DPORT=GTK \
+            -DLIBEXECDIR=/home/runner/work/Dotfiles/Dotfiles/surf-portable/usr/lib/webkit2gtk-4.0 \
+            -DENABLE_INTROSPECTION=OFF \
+            -DENABLE_DOCUMENTATION=OFF \
+            -DUSE_SYSTEMD=OFF \
+            -GNinja ..
+          ninja || { echo "WebKitGTK build failed"; exit 1; }
+          ninja install || { echo "WebKitGTK install failed"; exit 1; }
+
+      - name: Clone Surf repository
         run: |
           git clone https://git.suckless.org/surf
           cd surf || { echo "Failed to cd into surf"; exit 1; }
-          # Patch surf.c to set WebKit helper path
-          echo '#include <limits.h>' >> surf.c
-          echo '#include <webkit2/webkit2.h>' >> surf.c
-          echo '#include <libgen.h>' >> surf.c  # For dirname()
-          sed -i '/int main(int argc, char \*argv\[\])/i char path[PATH_MAX];\nchar *helper_path;\n' surf.c
-          sed -i '/gtk_init(&argc, &argv);/i \
-          if (realpath(argv[0], path)) {\n\
-            helper_path = dirname(path);\n\
-            char helper_dir[PATH_MAX];\n\
-            snprintf(helper_dir, PATH_MAX, "%s/../lib/webkit2gtk-4.0", helper_path);\n\
-            webkit_web_context_set_sandbox_enabled(webkit_web_context_get_default(), TRUE);\n\
-            webkit_web_context_set_process_model(webkit_web_context_get_default(), WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);\n\
-            webkit_web_context_set_web_process_count_limit(webkit_web_context_get_default(), 1);\n\
-            webkit_web_context_set_additional_execution_path(webkit_web_context_get_default(), helper_dir);\n\
-          }\n' surf.c
 
-      - name: Build Surf
+      - name: Build Surf with Custom WebKitGTK
         run: |
           cd surf || { echo "Failed to cd into surf"; exit 1; }
+          export PKG_CONFIG_PATH=/home/runner/work/Dotfiles/Dotfiles/surf-portable/usr/lib/pkgconfig:$PKG_CONFIG_PATH
           make || { echo "Make failed"; exit 1; }
           ls -l surf webext-surf.so || { echo "Binaries not found"; exit 1; }
 
@@ -60,94 +94,14 @@ jobs:
           cp surf/surf surf-portable/ || { echo "Failed to copy surf"; exit 1; }
           cp surf/webext-surf.so surf-portable/lib/ || { echo "Failed to copy webext-surf.so"; exit 1; }
           chmod +x surf-portable/surf
-          # Copy WebKit helper binaries
-          mkdir -p surf-portable/lib/webkit2gtk-4.0
-          cp -v /usr/lib/x86_64-linux-gnu/webkit2gtk-4.0/* surf-portable/lib/webkit2gtk-4.0/ || echo "Failed to copy WebKit helpers"
+          # Copy WebKitGTK libraries and helpers
+          cp -rv /home/runner/work/Dotfiles/Dotfiles/surf-portable/usr/lib/* surf-portable/lib/ || echo "Failed to copy WebKitGTK libs"
           # Copy all dependencies with lddtree
-          lddtree -l surf/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
-          lddtree -l surf/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
+          lddtree -l surf-portable/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
+          lddtree -l surf-portable/lib/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
           cat surf-deps.txt webext-deps.txt | sort -u | while read -r lib; do
             [ -f "$lib" ] && cp -v --parents "$lib" surf-portable/lib/ || echo "Skipping missing library: $lib"
           done
-          # Explicitly copy all critical libraries with symlinks resolved
-          find /usr/lib/x86_64-linux-gnu -name 'libgcr*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GCR libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgck*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GCK libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgtk*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GTK libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgdk*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GDK libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libatk*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No ATK libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libwebkit*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No WebKit libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libjavascriptcoregtk*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No JavaScriptCore libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libwebp*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No WebP libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libpng*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No PNG libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libjpeg*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No JPEG libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgio*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GIO libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libglib*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GLib libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libicu*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No ICU libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libsystemd*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No systemd libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxslt*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No XSLT libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'liblcms2*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No LCMS2 libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libwoff2*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No WOFF2 libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgst*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GStreamer libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libsoup*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No libsoup libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libenchant*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Enchant libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libsecret*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No libsecret libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libhyphen*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No hyphen libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libmanette*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No manette libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libXdamage*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xdamage libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libselinux*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No SELinux libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libpcre*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No PCRE libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libatomic*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No atomic libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxfixes*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xfixes libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxi*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xi libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxtst*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xtst libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxcomposite*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xcomposite libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxcursor*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xcursor libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxinerama*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xinerama libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxrandr*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xrandr libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libxv*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Xv libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libpango*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Pango libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libharfbuzz*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No HarfBuzz libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libvpx*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No VPX libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libflac*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No FLAC libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libvorbis*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Vorbis libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libopus*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Opus libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libmp3lame*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No MP3Lame libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libtwolame*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No TwoLame libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libtheora*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Theora libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libspeex*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Speex libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libshout*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Shout libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libtag1*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Tag libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libwavpack*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Wavpack libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'liborc*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Orc libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libegl*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No EGL libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgles*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GLES libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libopengl*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No OpenGL libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libglvnd*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GLVND libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgraphene*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Graphene libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libasyncns*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No AsyncNS libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libsndfile*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Sndfile libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libpulse*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Pulse libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libiec61883*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No IEC61883 libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libavc1394*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No AVC1394 libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libraw1394*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Raw1394 libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libdv*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No DV libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libv4l*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No V4L libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libvisual*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Visual libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libaa*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No AA libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libcaca*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Caca libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libjack*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Jack libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libsamplerate*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Samplerate libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libwebrtc*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No WebRTC libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libpipewire*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No PipeWire libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libspa*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No SPA libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libunwind*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Unwind libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libcairo-gobject*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No Cairo-GObject libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgdk_pixbuf-2.0*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GdkPixbuf libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libgobject-2.0*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No GObject libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libp11-kit*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No P11-Kit libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libX11*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No X11 libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libffi*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No FFI libraries found"
-          find /usr/lib/x86_64-linux-gnu -name 'libatspi*.so*' -exec cp -v --dereference {} surf-portable/lib/ \; || echo "No ATSPI libraries found"
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
@@ -158,8 +112,6 @@ jobs:
           ls -la surf-portable/lib/
           ls -la surf-portable/lib/webkit2gtk-4.0/
           du -sh surf-portable/
-          # Check critical libraries and helpers
-          ls -l surf-portable/lib/libatspi.so.0 surf-portable/lib/libffi.so.8 surf-portable/lib/libunwind.so.8 surf-portable/lib/libatomic.so.1 surf-portable/lib/libpcre.so.3 surf-portable/lib/libselinux.so.1 surf-portable/lib/libXdamage.so.1 surf-portable/lib/libmanette-0.2.so.0 surf-portable/lib/libhyphen.so.0 surf-portable/lib/libsecret-1.so.0 surf-portable/lib/libenchant-2.so.2 surf-portable/lib/libsoup-2.4.so.1 surf-portable/lib/libgstallocators-1.0.so.0 surf-portable/lib/libwoff2dec.so.1.0.2 surf-portable/lib/liblcms2.so.2 surf-portable/lib/libxslt.so.1 surf-portable/lib/libatk-1.0.so.0 surf-portable/lib/libsystemd.so.0 surf-portable/lib/libicui18n.so.70 surf-portable/lib/libjavascriptcoregtk-4.0.so.18 surf-portable/lib/libwebpmux.so.3 surf-portable/lib/libgck-1.so.0 surf-portable/lib/libgdk-3.so.0 surf-portable/lib/libwebkit2gtk-4.0.so.37 surf-portable/lib/libgcr-base-3.so.1 surf-portable/lib/libgcr-ui-3.so.1 surf-portable/lib/webkit2gtk-4.0/WebKitNetworkProcess surf-portable/lib/webkit2gtk-4.0/WebKitWebProcess || echo "Critical libraries or helpers missing"
 
       - name: Upload Surf binary
         uses: actions/upload-artifact@v4
