@@ -136,7 +136,7 @@ jobs:
           # Create wrapper script
           echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
           echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
-          echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" WEBKIT_EXEC_PATH="$DIR/lib/webkit2gtk-4.0" "$DIR/surf" "$@"' >> surf-port.Tooltipable/surf-wrapper.sh
+          echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" WEBKIT_EXEC_PATH="$DIR/lib/webkit2gtk-4.0" "$DIR/surf" "$@"' >> surf-portable/surf-wrapper.sh
           chmod +x surf-portable/surf-wrapper.sh
           # Debug output
           ls -la surf-portable/
