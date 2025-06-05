@@ -1,191 +1,171 @@
-name: Build Quickgui AppImage
+name: Build qutebrowser
 
 on:
+  pull_request:
+    paths:
+      - 'srcpkgs/**'
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+      - 'ci-**'
+    paths:
+      - 'srcpkgs/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  xlint:
+    name: Lint templates
     runs-on: ubuntu-latest
 
+    container:
+      image: 'ghcr.io/void-linux/void-glibc-full:20250227R1'
+      env:
+        LICENSE_LIST: common/travis/license.lst
+
     steps:
-      # Checkout your Dotfiles repo (optional, for workflow file)
-      - name: Checkout current repository
-        uses: actions/checkout@v4
-
-      # Clone Quickgui repository explicitly
-      - name: Clone Quickgui repository
+      - name: Prepare container
         run: |
-          git clone https://github.com/quickemu-project/quickgui.git quickgui
-          cd quickgui
-          git checkout main
+          mkdir -p /etc/xbps.d && cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/
+          sed -i 's|repo-default|repo-ci|g' /etc/xbps.d/*-repository-*.conf
+          xbps-install -Syu xbps && xbps-install -yu && xbps-install -y sudo bash grep curl git
+          useradd -G xbuilder -M builder
+      - name: Clone and checkout
+        uses: classabbyamp/treeless-checkout-action@v1
 
-      # Debug: Verify Quickgui checkout
-      - name: Debug - Verify Quickgui directory
+      - name: Prepare masterdir
         run: |
-          cd quickgui
-          echo "Current directory: $(/bin/pwd)"
-          ls -la
-          if [ -f pubspec.yaml ]; then
-            echo "pubspec.yaml found in $(/bin/pwd)"
-          else
-            echo "pubspec.yaml not found in $(/bin/pwd)"
+          chown -R builder:builder . &&
+          sudo -Eu builder common/travis/set_mirror.sh &&
+          common/travis/fetch-xtools.sh
+      - name: Find changed templates
+        run: sudo -Eu builder common/travis/changed_templates.sh
+
+      - name: Run lints
+        run: |
+          sudo -Eu builder common/travis/verify-update-check.sh || rv=1
+          sudo -Eu builder common/travis/xlint.sh || rv=1
+          exit "${rv:-0}"
+  build:
+    name: Build packages
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.title, '[ci skip]') && !contains(github.event.pull_request.body, '[ci skip]')"
+
+    container:
+      image: ghcr.io/void-linux/void-glibc-full:20250227R1
+      options: --platform ${{ matrix.config.platform }} --privileged
+      volumes:
+        - /dev:/dev
+      env:
+        ARCH: '${{ matrix.config.arch }}'
+        BOOTSTRAP: '${{ matrix.config.host }}'
+        TEST: '${{ matrix.config.test }}'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { arch: x86_64,       host: x86_64,      libc: glibc, platform: linux/amd64, test: 1 }
+          - { arch: i686,         host: i686,        libc: glibc, platform: linux/386,   test: 1 }
+          - { arch: aarch64,      host: x86_64,      libc: glibc, platform: linux/amd64, test: 0 }
+          - { arch: armv7l,       host: x86_64,      libc: glibc, platform: linux/amd64, test: 0 }
+
+    steps:
+      - name: Prepare container
+        run: |
+          mkdir -p /etc/xbps.d && cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/
+          sed -i 's|repo-default|repo-ci|g' /etc/xbps.d/*-repository-*.conf
+          xbps-install -Syu xbps && xbps-install -yu && xbps-install -y sudo bash curl git
+          useradd -G xbuilder -M builder
+      - name: Clone and checkout
+        uses: classabbyamp/treeless-checkout-action@v1
+
+      - name: Prepare masterdir
+        run: |
+          chown -R builder:builder . &&
+          sudo -Eu builder common/travis/set_mirror.sh &&
+          sudo -Eu builder common/travis/prepare.sh &&
+          common/travis/fetch-xtools.sh
+      - name: Find changed templates
+        run: sudo -Eu builder common/travis/changed_templates.sh
+
+      - name: Install dependencies
+        run: |
+          xbps製品 -Syu
+          xbps-install -y base-devel git python3 python3-pip python3-virtualenv wget patchelf curl \
+            libpulseaudio alsa-lib
+          mkdir -p ~/qutebrowser-portable-build
+
+      - name: Download qutebrowser 3.5.1
+        run: |
+          set -x
+          echo "Downloading qutebrowser 3.5.1..."
+          curl -L --retry 3 --retry-delay 5 --verbose \
+            "https://github.com/qutebrowser/qutebrowser/releases/download/v3.5.1/qutebrowser-3.5.1.tar.gz" \
+            -o qutebrowser-3.5.1.tar.gz
+          if [ ! -f qutebrowser-3.5.1.tar.gz ] || [ $(stat -c %s qutebrowser-3.5.1.tar.gz) -lt 100000 ]; then
+            echo "Error: qutebrowser 3.5.1 tarball download failed or file is too small"
             exit 1
           fi
+          ls -lh qutebrowser-3.5.1.tar.gz
 
-      # Set up Flutter with a compatible version
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.22.x'
-          channel: 'stable'
-
-      # Verify Flutter installation
-      - name: Verify Flutter setup
-        run: flutter --version
-        working-directory: quickgui
-
-      # Enable Linux desktop support
-      - name: Enable Linux desktop
-        run: flutter config --enable-linux-desktop
-        working-directory: quickgui
-
-      # Get Flutter dependencies
-      - name: Get Flutter dependencies
-        run: flutter pub get
-        working-directory: quickgui
-
-      # Install system dependencies
-      - name: Install system dependencies
+      - name: Extract qutebrowser 3.5.1
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            git \
-            file \
-            libgtk-3-dev \
-            libfuse2 \
-            wget \
-            imagemagick
-
-      # Build Quickgui
-      - name: Build Quickgui
-        run: |
-          flutter build linux --release
-          echo "Listing build output:"
-          ls -l build/linux/x64/release/bundle/
-        working-directory: quickgui
-
-      # Create AppDir structure
-      - name: Set up AppDir
-        run: |
-          mkdir -p Quickgui.AppDir/usr/bin
-          mkdir -p Quickgui.AppDir/usr/lib
-          mkdir -p Quickgui.AppDir/usr/share/applications
-          mkdir -p Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps
-          cp -r quickgui/build/linux/x64/release/bundle/* Quickgui.AppDir/usr/bin/
-          # Ensure the binary is named quickgui and executable
-          echo "Checking copied files:"
-          ls -l Quickgui.AppDir/usr/bin/
-          if [ -f Quickgui.AppDir/usr/bin/quickgui ]; then
-            echo "quickgui binary found"
-          else
-            echo "Renaming binary to quickgui"
-            BINARY=$(ls Quickgui.AppDir/usr/bin/* | grep -i quickgui || ls Quickgui.AppDir/usr/bin/* | head -n 1)
-            if [ -n "$BINARY" ]; then
-              mv "$BINARY" Quickgui.AppDir/usr/bin/quickgui
-              chmod +x Quickgui.AppDir/usr/bin/quickgui
-            else
-              echo "Error: No quickgui-like binary found in build output" >&2
-              exit 1
-            fi
-          fi
-
-      # Add Quickgui desktop file
-      - name: Create .desktop file
-        run: |
-          cat <<EOF > Quickgui.AppDir/usr/share/applications/quickgui.desktop
-          [Desktop Entry]
-          Name=Quickgui
-          Exec=quickgui-wrapper
-          Type=Application
-          Icon=quickgui
-          Comment=An elegant virtual machine manager for the desktop
-          Categories=Utility;
-          EOF
-
-      # Add an icon
-      - name: Add icon
-        run: |
-          ICON_PATH="quickgui/assets/icon.png"
-          if [ -f "$ICON_PATH" ]; then
-            cp "$ICON_PATH" Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png
-          else
-            echo "Icon not found; using placeholder"
-            convert -size 256x256 xc:white Quickgui.AppDir/usr/share/icons/hicolor/256x256/apps/quickgui.png
-          fi
-
-      # Download and bundle Quickemu script (raw file)
-      - name: Bundle Quickemu
-        run: |
-          wget https://raw.githubusercontent.com/quickemu-project/quickemu/4.9.7/quickemu -O Quickgui.AppDir/usr/bin/quickemu
-          chmod +x Quickgui.AppDir/usr/bin/quickemu
-
-      # Create a wrapper script to set PATH for Quickgui
-      - name: Create Quickgui wrapper script
-        run: |
-          cat <<EOF > Quickgui.AppDir/usr/bin/quickgui-wrapper
-          #!/bin/bash
-          # Get the AppImage's root directory
-          APPDIR=\$(dirname "\$(readlink -f "\$0")")/..
-          # Set PATH to include bundled binaries
-          export PATH="\$APPDIR/usr/bin:\$PATH"
-          # Find and run quickgui
-          QUICKGUI_BIN="\$APPDIR/usr/bin/quickgui"
-          if [ -f "\$QUICKGUI_BIN" ]; then
-            exec "\$QUICKGUI_BIN" "\$@"
-          else
-            echo "Error: quickgui binary not found at \$QUICKGUI_BIN" >&2
-            ls -l "\$APPDIR/usr/bin/"
+          set -x
+          echo "Extracting qutebrowser 3.5.1..."
+          tar -xzf qutebrowser-3.5.1.tar.gz -C ~/qutebrowser-portable-build
+          if [ ! -d ~/qutebrowser-portable-build/qutebrowser-3.5.1 ]; then
+            echo "Error: qutebrowser 3.5.1 extraction failed"
             exit 1
           fi
-          EOF
-          chmod +x Quickgui.AppDir/usr/bin/quickgui-wrapper
+          QUTEBROWSER_DIR="$HOME/qutebrowser-portable-build/qutebrowser-3.5.1"
+          echo "QUTEBROWSER_DIR=$QUTEBROWSER_DIR" >> $GITHUB_ENV
 
-      # Debug: Verify AppDir contents before AppImage creation
-      - name: Debug - Verify AppDir structure
+      - name: Download Qt 6.7.0
         run: |
-          echo "Contents of Quickgui.AppDir/usr/bin:"
-          ls -l Quickgui.AppDir/usr/bin/
-          echo "Checking quickemu:"
-          Quickgui.AppDir/usr/bin/quickemu --version || echo "quickemu not executable"
-          echo "Checking quickgui:"
-          Quickgui.AppDir/usr/bin/quickgui --version || echo "quickgui not executable"
-          echo "Checking quickgui-wrapper:"
-          Quickgui.AppDir/usr/bin/quickgui-wrapper --version || echo "Wrapper failed"
+          set -x
+          echo "Downloading Qt 6.7.0..."
+          curl -L --retry 3 --retry-delay 5 --verbose \
+            "https://download.qt.io/archive/qt/6.7/6.7.0/single/qt-everywhere-src-6.7.0.tar.xz" \
+            -o qt-everywhere-src-6.7.0.tar.xz
+          if [ ! -f qt-everywhere-src-6.7.0.tar.xz ] || [ $(stat -c %s qt-everywhere-src-6.7.0.tar.xz) -lt 100000 ]; then
+            echo "Error: Qt 6.7.0 tarball download failed or file is too small"
+            exit 1
+          fi
+          ls -lh qt-everywhere-src-6.7.0.tar.xz
 
-      # Install linuxdeploy for AppImage creation
-      - name: Install linuxdeploy
+      - name: Extract Qt 6.7.0
         run: |
-          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          chmod +x linuxdeploy-x86_64.AppImage
-          sudo mv linuxdeploy-x86_64.AppImage /usr/local/bin/linuxdeploy
+          set -x
+          echo "Extracting Qt 6.7.0..."
+          tar -xf qt-everywhere-src-6.7.0.tar.xz -C ~/qutebrowser-portable-build
+          if [ ! -d ~/qutebrowser-portable-build/qt-everywhere-src-6.7.0 ]; then
+            echo "Error: Qt 6.7.0 extraction failed"
+            exit 1
+          fi
+          QT_DIR="$HOME/qutebrowser-portable-build/qt-everywhere-src-6.7.0"
+          echo "QT_DIR=$QT_DIR" >> $GITHUB_ENV
 
-      # Create the AppImage with explicit executable
-      - name: Generate AppImage
+      - name: Build and check packages
+        run: sudo -Eu builder common/travis/build.sh "$BOOTSTRAP" "$ARCH" "$TEST"
+
+      - name: Show files
+        run: sudo -Eu builder common/travis/show_files.sh "$BOOTSTRAP" "$ARCH"
+
+      - name: Compare to previous
+        run: sudo -Eu builder common/travis/xpkgdiff.sh "$BOOTSTRAP" "$ARCH"
+
+      - name: Check file conflicts
+        if: matrix.config.arch == 'x86_64'
         run: |
-          linuxdeploy --appdir Quickgui.AppDir --executable Quickgui.AppDir/usr/bin/quickgui --output appimage
-          mv Quickgui-x86_64.AppImage Quickgui-${{ github.sha }}-x86_64.AppImage
-
-      # Upload the AppImage as an artifact
-      - name: Upload AppImage
-        uses: actions/upload-artifact@v4
-        with:
-          name: Quickgui-AppImage
-          path: Quickgui-${{ github.sha }}-x86_64.AppImage
+          if [ -s /tmp/templates ]; then
+              export XDG_CACHE_HOME="$PWD/.cache"
+              sudo -Eu builder xlocate -S &&
+              sudo -Eu builder common/scripts/lint-conflicts
+          fi
+      - name: Verify repository state
+        run: |
+          mkdir -p /check-install &&
+          chown builder:builder /check-install &&
+          sudo -Eu builder common/travis/check-install.sh "$BOOTSTRAP" "$ARCH"
