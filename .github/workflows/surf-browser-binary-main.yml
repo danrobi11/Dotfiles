@@ -1,133 +1,171 @@
-name: Build Surf Browser with Custom WebKitGTK
+name: Build qutebrowser
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+    paths:
+      - 'srcpkgs/**'
+  push:
+    branches:
+      - 'ci-**'
+    paths:
+      - 'srcpkgs/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    
+  xlint:
+    name: Lint templates
+    runs-on: ubuntu-latest
+
+    container:
+      image: 'ghcr.io/void-linux/void-glibc-full:20250227R1'
+      env:
+        LICENSE_LIST: common/travis/license.lst
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Install build dependencies
+      - name: Prepare container
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git \
-            build-essential \
-            cmake \
-            ninja-build \
-            libgtk-3-dev \
-            libgcr-3-dev \
-            libwebkit2gtk-4.0-dev \
-            libxslt1-dev \
-            libxml2-dev \
-            libsoup2.4-dev \
-            libsecret-1-dev \
-            libgstreamer1.0-dev \
-            libgstreamer-plugins-base1.0-dev \
-            gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good \
-            gstreamer1.0-pulseaudio \
-            gstreamer1.0-alsa \
-            libharfbuzz-dev \
-            libfontconfig1-dev \
-            libfreetype6-dev \
-            libpng-dev \
-            libjpeg-dev \
-            libwebp-dev \
-            libsqlite3-dev \
-            libicu-dev \
-            libenchant-2-dev \
-            libhyphen-dev \
-            libmanette-0.2-dev \
-            libwoff-dev \
-            libopenjp2-7-dev \
-            libp11-kit-dev \
-            libunwind-dev \
-            libffi-dev \
-            libatspi2.0-dev \
-            libtasn1-dev \
-            gperf \
-            gettext \
-            ruby \
-            python3 \
-            curl \
-            pax-utils  # For lddtree
+          mkdir -p /etc/xbps.d && cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/
+          sed -i 's|repo-default|repo-ci|g' /etc/xbps.d/*-repository-*.conf
+          xbps-install -Syu xbps && xbps-install -yu && xbps-install -y sudo bash grep curl git
+          useradd -G xbuilder -M builder
+      - name: Clone and checkout
+        uses: classabbyamp/treeless-checkout-action@v1
 
-      - name: Clone WebKitGTK
+      - name: Prepare masterdir
         run: |
-          git clone --depth 1 --branch webkitgtk-2.36.8 https://github.com/WebKit/WebKit.git webkitgtk
-          cd webkitgtk || { echo "Failed to cd into webkitgtk"; exit 1; }
+          chown -R builder:builder . &&
+          sudo -Eu builder common/travis/set_mirror.sh &&
+          common/travis/fetch-xtools.sh
+      - name: Find changed templates
+        run: sudo -Eu builder common/travis/changed_templates.sh
 
-      - name: Build and Install WebKitGTK
+      - name: Run lints
         run: |
-          cd webkitgtk
-          mkdir build
-          cd build
-          cmake \
-            -DCMAKE_INSTALL_PREFIX=/home/runner/work/Dotfiles/Dotfiles/surf-portable/usr \
-            -DPORT=GTK \
-            -DLIBEXECDIR=/home/runner/work/Dotfiles/Dotfiles/surf-portable/usr/lib/webkit2gtk-4.0 \
-            -DENABLE_INTROSPECTION=OFF \
-            -DENABLE_DOCUMENTATION=OFF \
-            -DUSE_SYSTEMD=OFF \
-            -DUSE_SOUP2=ON \
-            -DUSE_WPE_RENDERER=OFF \
-            -DUSE_LIBNOTIFY=OFF \
-            -DENABLE_JOURNALD_LOG=OFF \
-            -DUSE_GTK4=OFF \
-            -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
-            -GNinja ..
-          ninja || { echo "WebKitGTK build failed"; exit 1; }
-          ninja install || { echo "WebKitGTK install failed"; exit 1; }
+          sudo -Eu builder common/travis/verify-update-check.sh || rv=1
+          sudo -Eu builder common/travis/xlint.sh || rv=1
+          exit "${rv:-0}"
+  build:
+    name: Build packages
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.title, '[ci skip]') && !contains(github.event.pull_request.body, '[ci skip]')"
 
-      - name: Clone Surf repository
+    container:
+      image: ghcr.io/void-linux/void-glibc-full:20250227R1
+      options: --platform ${{ matrix.config.platform }} --privileged
+      volumes:
+        - /dev:/dev
+      env:
+        ARCH: '${{ matrix.config.arch }}'
+        BOOTSTRAP: '${{ matrix.config.host }}'
+        TEST: '${{ matrix.config.test }}'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { arch: x86_64,       host: x86_64,      libc: glibc, platform: linux/amd64, test: 1 }
+          - { arch: i686,         host: i686,        libc: glibc, platform: linux/386,   test: 1 }
+          - { arch: aarch64,      host: x86_64,      libc: glibc, platform: linux/amd64, test: 0 }
+          - { arch: armv7l,       host: x86_64,      libc: glibc, platform: linux/amd64, test: 0 }
+
+    steps:
+      - name: Prepare container
         run: |
-          git clone https://git.suckless.org/surf
-          cd surf || { echo "Failed to cd into surf"; exit 1; }
+          mkdir -p /etc/xbps.d && cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/
+          sed -i 's|repo-default|repo-ci|g' /etc/xbps.d/*-repository-*.conf
+          xbps-install -Syu xbps && xbps-install -yu && xbps-install -y sudo bash curl git
+          useradd -G xbuilder -M builder
+      - name: Clone and checkout
+        uses: classabbyamp/treeless-checkout-action@v1
 
-      - name: Build Surf with Custom WebKitGTK
+      - name: Prepare masterdir
         run: |
-          cd surf || { echo "Failed to cd into surf"; exit 1; }
-          export PKG_CONFIG_PATH=/home/runner/work/Dotfiles/Dotfiles/surf-portable/usr/lib/pkgconfig:$PKG_CONFIG_PATH
-          make || { echo "Make failed"; exit 1; }
-          ls -l surf webext-surf.so || { echo "Binaries not found"; exit 1; }
+          chown -R builder:builder . &&
+          sudo -Eu builder common/travis/set_mirror.sh &&
+          sudo -Eu builder common/travis/prepare.sh &&
+          common/travis/fetch-xtools.sh
+      - name: Find changed templates
+        run: sudo -Eu builder common/travis/changed_templates.sh
 
-      - name: Prepare portable binary
+      - name: Install dependencies
         run: |
-          mkdir -p surf-portable/lib || { echo "Failed to create surf-portable"; exit 1; }
-          cp surf/surf surf-portable/ || { echo "Failed to copy surf"; exit 1; }
-          cp surf/webext-surf.so surf-portable/lib/ || { echo "Failed to copy webext-surf.so"; exit 1; }
-          chmod +x surf-portable/surf
-          # Copy WebKitGTK libraries and helpers
-          cp -rv /home/runner/work/Dotfiles/Dotfiles/surf-portable/usr/lib/* surf-portable/lib/ || echo "Failed to copy WebKitGTK libs"
-          # Copy all dependencies with lddtree
-          lddtree -l surf-portable/surf > surf-deps.txt || { echo "Failed to run lddtree on surf"; exit 1; }
-          lddtree -l surf-portable/lib/webext-surf.so > webext-deps.txt || { echo "Failed to run lddtree on webext-surf.so"; exit 1; }
-          cat surf-deps.txt webext-deps.txt | sort -u | while read -r lib; do
-            [ -f "$lib" ] && cp -v --parents "$lib" surf-portable/lib/ || echo "Skipping missing library: $lib"
-          done
-          # Create wrapper script
-          echo '#!/bin/bash' > surf-portable/surf-wrapper.sh
-          echo 'DIR="$(dirname "$(readlink -f "$0")")"' >> surf-portable/surf-wrapper.sh
-          echo 'LD_LIBRARY_PATH="$DIR/lib:$LD_LIBRARY_PATH" "$DIR/surf" "$@"' >> surf-portable/surf-wrapper.sh
-          chmod +x surf-portable/surf-wrapper.sh
-          # Debug output
-          ls -la surf-portable/
-          ls -la surf-portable/lib/
-          ls -la surf-portable/lib/webkit2gtk-4.0/
-          du -sh surf-portable/
+          xbps製品 -Syu
+          xbps-install -y base-devel git python3 python3-pip python3-virtualenv wget patchelf curl \
+            libpulseaudio alsa-lib
+          mkdir -p ~/qutebrowser-portable-build
 
-      - name: Upload Surf binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: surf-portable-binary
-          path: surf-portable/
-          retention-days: 7
+      - name: Download qutebrowser 3.5.1
+        run: |
+          set -x
+          echo "Downloading qutebrowser 3.5.1..."
+          curl -L --retry 3 --retry-delay 5 --verbose \
+            "https://github.com/qutebrowser/qutebrowser/releases/download/v3.5.1/qutebrowser-3.5.1.tar.gz" \
+            -o qutebrowser-3.5.1.tar.gz
+          if [ ! -f qutebrowser-3.5.1.tar.gz ] || [ $(stat -c %s qutebrowser-3.5.1.tar.gz) -lt 100000 ]; then
+            echo "Error: qutebrowser 3.5.1 tarball download failed or file is too small"
+            exit 1
+          fi
+          ls -lh qutebrowser-3.5.1.tar.gz
+
+      - name: Extract qutebrowser 3.5.1
+        run: |
+          set -x
+          echo "Extracting qutebrowser 3.5.1..."
+          tar -xzf qutebrowser-3.5.1.tar.gz -C ~/qutebrowser-portable-build
+          if [ ! -d ~/qutebrowser-portable-build/qutebrowser-3.5.1 ]; then
+            echo "Error: qutebrowser 3.5.1 extraction failed"
+            exit 1
+          fi
+          QUTEBROWSER_DIR="$HOME/qutebrowser-portable-build/qutebrowser-3.5.1"
+          echo "QUTEBROWSER_DIR=$QUTEBROWSER_DIR" >> $GITHUB_ENV
+
+      - name: Download Qt 6.7.0
+        run: |
+          set -x
+          echo "Downloading Qt 6.7.0..."
+          curl -L --retry 3 --retry-delay 5 --verbose \
+            "https://download.qt.io/archive/qt/6.7/6.7.0/single/qt-everywhere-src-6.7.0.tar.xz" \
+            -o qt-everywhere-src-6.7.0.tar.xz
+          if [ ! -f qt-everywhere-src-6.7.0.tar.xz ] || [ $(stat -c %s qt-everywhere-src-6.7.0.tar.xz) -lt 100000 ]; then
+            echo "Error: Qt 6.7.0 tarball download failed or file is too small"
+            exit 1
+          fi
+          ls -lh qt-everywhere-src-6.7.0.tar.xz
+
+      - name: Extract Qt 6.7.0
+        run: |
+          set -x
+          echo "Extracting Qt 6.7.0..."
+          tar -xf qt-everywhere-src-6.7.0.tar.xz -C ~/qutebrowser-portable-build
+          if [ ! -d ~/qutebrowser-portable-build/qt-everywhere-src-6.7.0 ]; then
+            echo "Error: Qt 6.7.0 extraction failed"
+            exit 1
+          fi
+          QT_DIR="$HOME/qutebrowser-portable-build/qt-everywhere-src-6.7.0"
+          echo "QT_DIR=$QT_DIR" >> $GITHUB_ENV
+
+      - name: Build and check packages
+        run: sudo -Eu builder common/travis/build.sh "$BOOTSTRAP" "$ARCH" "$TEST"
+
+      - name: Show files
+        run: sudo -Eu builder common/travis/show_files.sh "$BOOTSTRAP" "$ARCH"
+
+      - name: Compare to previous
+        run: sudo -Eu builder common/travis/xpkgdiff.sh "$BOOTSTRAP" "$ARCH"
+
+      - name: Check file conflicts
+        if: matrix.config.arch == 'x86_64'
+        run: |
+          if [ -s /tmp/templates ]; then
+              export XDG_CACHE_HOME="$PWD/.cache"
+              sudo -Eu builder xlocate -S &&
+              sudo -Eu builder common/scripts/lint-conflicts
+          fi
+      - name: Verify repository state
+        run: |
+          mkdir -p /check-install &&
+          chown builder:builder /check-install &&
+          sudo -Eu builder common/travis/check-install.sh "$BOOTSTRAP" "$ARCH"
